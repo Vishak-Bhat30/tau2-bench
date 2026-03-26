@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
@@ -712,9 +713,13 @@ class ConsoleDisplay:
 
                 current_turn = None
                 for msg in simulation.messages:
+                    raw_content = msg.content or ""
+                    # Strip <think>...</think> blocks from thinking models
+                    if raw_content:
+                        raw_content = re.sub(r"<think>.*?</think>", "", raw_content, flags=re.DOTALL).strip()
                     content = (
-                        cls.escape_markup(msg.content)
-                        if msg.content is not None
+                        cls.escape_markup(raw_content)
+                        if raw_content
                         else ""
                     )
                     details = ""
@@ -1055,6 +1060,15 @@ class ConsoleDisplay:
             )
             table.add_row(f"   Pass^{k}", f"[{pk_color}]{pass_k:.3f}[/]")
         table.add_row("💰 Avg Cost/Conversation", f"${metrics.avg_agent_cost:.4f}")
+        table.add_row("", "")
+
+        # Token usage metrics (output only, per-task average — sums all trials per task)
+        table.add_row("[cyan]═══ Output Tokens (Avg/Task, all trials) ═══[/]", "")
+        table.add_row("📊 Total Output Tokens", f"{metrics.avg_completion_tokens:,.0f}")
+        if metrics.avg_reasoning_tokens > 0:
+            table.add_row("🧠   └─ Reasoning Tokens", f"{metrics.avg_reasoning_tokens:,.0f}")
+            non_reasoning = metrics.avg_completion_tokens - metrics.avg_reasoning_tokens
+            table.add_row("💬   └─ Final Output Tokens", f"{non_reasoning:,.0f}")
         table.add_row("", "")
 
         # Action metrics
