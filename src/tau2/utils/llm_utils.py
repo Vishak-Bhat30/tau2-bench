@@ -135,10 +135,17 @@ def get_response_usage(response: ModelResponse) -> Optional[dict]:
     usage: Optional[Usage] = response.get("usage")
     if usage is None:
         return None
-    return {
+    result = {
         "completion_tokens": usage.completion_tokens,
         "prompt_tokens": usage.prompt_tokens,
     }
+    # Extract reasoning tokens from completion_tokens_details (thinking models)
+    details = getattr(usage, "completion_tokens_details", None)
+    if details is not None:
+        reasoning = getattr(details, "reasoning_tokens", None)
+        if reasoning is not None:
+            result["reasoning_tokens"] = reasoning
+    return result
 
 
 def to_tau2_messages(
@@ -432,15 +439,24 @@ def generate(
         "The response should be an assistant message"
     )
     content = response_choice.message.content
+    # Strip <think>...</think> blocks from thinking models (e.g., Qwen3-Thinking)
+    if content:
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip() or None
     raw_tool_calls = response_choice.message.tool_calls or []
-    tool_calls = [
-        ToolCall(
-            id=tool_call.id,
-            name=tool_call.function.name,
-            arguments=json.loads(tool_call.function.arguments),
+    tool_calls = []
+    for tool_call in raw_tool_calls:
+        try:
+            arguments = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
+        except json.JSONDecodeError:
+            logger.warning(f"Failed to parse tool call arguments for {tool_call.function.name}: {tool_call.function.arguments!r}")
+            arguments = {}
+        tool_calls.append(
+            ToolCall(
+                id=tool_call.id,
+                name=tool_call.function.name,
+                arguments=arguments,
+            )
         )
-        for tool_call in raw_tool_calls
-    ]
     tool_calls = tool_calls or None
 
     message = AssistantMessage(
@@ -494,7 +510,7 @@ def get_token_usage(messages: list[Message]) -> dict:
     """
     Get the token usage of the interaction between the agent and the user.
     """
-    usage = {"completion_tokens": 0, "prompt_tokens": 0}
+    usage = {"completion_tokens": 0, "prompt_tokens": 0, "reasoning_tokens": 0}
     for message in messages:
         if isinstance(message, ToolMessage):
             continue
@@ -503,6 +519,7 @@ def get_token_usage(messages: list[Message]) -> dict:
             continue
         usage["completion_tokens"] += message.usage["completion_tokens"]
         usage["prompt_tokens"] += message.usage["prompt_tokens"]
+        usage["reasoning_tokens"] += message.usage.get("reasoning_tokens", 0)
     return usage
 
 

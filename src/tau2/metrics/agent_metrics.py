@@ -22,6 +22,12 @@ class AgentMetrics(BaseModel):
     pass_hat_ks: dict[int, float]
     avg_agent_cost: float
 
+    # Token usage metrics (averages per conversation)
+    avg_prompt_tokens: float = 0.0
+    avg_completion_tokens: float = 0.0
+    avg_reasoning_tokens: float = 0.0
+    avg_total_tokens: float = 0.0
+
     # Simulation counts
     total_simulations: int = 0
     total_tasks: int = 0
@@ -244,6 +250,30 @@ def compute_metrics(results: Results) -> AgentMetrics:
             pass_hat_ks[k] = df_pass_hat_k[column].mean()
     avg_agent_cost = df.agent_cost.mean()
 
+    # Token usage aggregation — per-task averages (sum all trials for a task, then average across tasks)
+    from collections import defaultdict as _defaultdict
+
+    from tau2.utils.llm_utils import get_token_usage
+
+    task_completion_tokens: dict[str, int] = _defaultdict(int)
+    task_reasoning_tokens: dict[str, int] = _defaultdict(int)
+    tasks_with_usage: set[str] = set()
+    for sim in evaluated_sims:
+        msgs = sim.get_messages()
+        if msgs:
+            usage = get_token_usage(msgs)
+            task_completion_tokens[sim.task_id] += usage["completion_tokens"]
+            task_reasoning_tokens[sim.task_id] += usage["reasoning_tokens"]
+            tasks_with_usage.add(sim.task_id)
+    num_tasks_with_usage = len(tasks_with_usage)
+    if num_tasks_with_usage > 0:
+        avg_completion_tokens = sum(task_completion_tokens.values()) / num_tasks_with_usage
+        avg_reasoning_tokens = sum(task_reasoning_tokens.values()) / num_tasks_with_usage
+        avg_total_tokens = avg_completion_tokens  # completion_tokens includes reasoning
+    else:
+        avg_completion_tokens = avg_reasoning_tokens = avg_total_tokens = 0.0
+    avg_prompt_tokens = 0.0  # not tracked
+
     # Counts exclude infrastructure errors
     total_simulations = len(evaluated_sims)
     total_tasks = len(set(sim.task_id for sim in evaluated_sims))
@@ -447,6 +477,10 @@ def compute_metrics(results: Results) -> AgentMetrics:
         avg_reward=avg_reward,
         pass_hat_ks=pass_hat_ks,
         avg_agent_cost=avg_agent_cost,
+        avg_prompt_tokens=avg_prompt_tokens,
+        avg_completion_tokens=avg_completion_tokens,
+        avg_reasoning_tokens=avg_reasoning_tokens,
+        avg_total_tokens=avg_total_tokens,
         total_simulations=total_simulations,
         total_tasks=total_tasks,
         infra_error_count=infra_error_count,
