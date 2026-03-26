@@ -126,7 +126,7 @@ def get_response_cost(response: ModelResponse) -> float:
     try:
         cost = completion_cost(completion_response=response)
     except Exception as e:
-        logger.error(e)
+        logger.debug(e)
         return 0.0
     return cost
 
@@ -439,9 +439,6 @@ def generate(
         "The response should be an assistant message"
     )
     content = response_choice.message.content
-    # Strip <think>...</think> blocks from thinking models (e.g., Qwen3-Thinking)
-    if content:
-        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip() or None
     raw_tool_calls = response_choice.message.tool_calls or []
     tool_calls = []
     for tool_call in raw_tool_calls:
@@ -525,8 +522,11 @@ def get_token_usage(messages: list[Message]) -> dict:
 
 def extract_json_from_llm_response(response: str) -> str:
     """
-    Extract JSON from an LLM response, handling markdown code blocks.
+    Extract JSON from an LLM response, handling markdown code blocks and <think> tags.
     """
+    # Strip <think>...</think> blocks from thinking models
+    response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
+
     # Try to extract JSON from markdown code blocks
     # Match ```json ... ``` or ``` ... ```
     pattern = r"```(?:json)?\s*([\s\S]*?)```"
