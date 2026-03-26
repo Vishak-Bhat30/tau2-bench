@@ -714,9 +714,11 @@ class ConsoleDisplay:
                 current_turn = None
                 for msg in simulation.messages:
                     raw_content = msg.content or ""
-                    # Strip <think>...</think> blocks from thinking models
+                    # Strip thinking traces from thinking models
+                    # Handles both <think>...</think> blocks and content before a bare </think> tag
                     if raw_content:
                         raw_content = re.sub(r"<think>.*?</think>", "", raw_content, flags=re.DOTALL).strip()
+                        raw_content = re.sub(r"^.*?</think>", "", raw_content, flags=re.DOTALL).strip()
                     content = (
                         cls.escape_markup(raw_content)
                         if raw_content

@@ -524,8 +524,9 @@ def extract_json_from_llm_response(response: str) -> str:
     """
     Extract JSON from an LLM response, handling markdown code blocks and <think> tags.
     """
-    # Strip <think>...</think> blocks from thinking models
+    # Strip thinking traces (both <think>...</think> and bare ...)</think> patterns)
     response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
+    response = re.sub(r"^.*?</think>", "", response, flags=re.DOTALL).strip()
 
     # Try to extract JSON from markdown code blocks
     # Match ```json ... ``` or ``` ... ```
