@@ -73,26 +73,19 @@ tau2 view
 
 ### A. Thinking Trace Stripping (`<think>...</think>`)
 
-Qwen3-Thinking wraps its internal reasoning in `<think>...</think>` tags. Two places
-were modified to strip these before storing/displaying content:
+Qwen3-Thinking wraps its internal reasoning in `<think>...</think>` tags. Stripping is
+done **only at display time** (in `tau2 view`), NOT in `generate()`. The full thinking
+trace is preserved in stored messages so the model retains its reasoning context during
+the conversation.
 
-**1. `src/tau2/utils/llm_utils.py` — line 442–444** (in `generate()`)
-```python
-# Strip <think>...</think> blocks from thinking models (e.g., Qwen3-Thinking)
-if content:
-    content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip() or None
-```
-
-**2. `src/tau2/utils/display.py` — line 717–719** (in message display loop)
+**`src/tau2/utils/display.py` — line 717–719** (in message display loop)
 ```python
 # Strip <think>...</think> blocks from thinking models
 if raw_content:
     raw_content = re.sub(r"<think>.*?</think>", "", raw_content, flags=re.DOTALL).strip()
 ```
 
-**To get reasoning traces back** (keep `<think>` blocks), comment out:
-- `src/tau2/utils/llm_utils.py` lines **442–444** (to keep them in stored messages)
-- `src/tau2/utils/display.py` lines **717–719** (to show them in `tau2 view`)
+**To show reasoning traces in `tau2 view`**, comment out `src/tau2/utils/display.py` lines **717–719**.
 
 ### B. Reasoning Token Tracking
 
