@@ -366,6 +366,10 @@ class Environment:
             # comparison issues.
             if not self._is_mutating_tool(tool_call.name):
                 continue
+            # Skip tool calls that were blocked by the verifier -- they never
+            # executed against the real environment so there is no state to replay.
+            if expected_response.error and expected_response.content.startswith("[VERIFIER"):
+                continue
             response = self.get_response(tool_call)
             try:
                 content = json.loads(response.content)

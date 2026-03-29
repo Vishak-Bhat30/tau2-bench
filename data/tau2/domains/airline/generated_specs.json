@@ -1,0 +1,964 @@
+{
+  "0": {
+    "task_id": "0",
+    "domain": "airline",
+    "reasoning": "Cancel not allowed: >24h since booking, no insurance, not covered by any exception",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "1": {
+    "task_id": "1",
+    "domain": "airline",
+    "reasoning": "Cancel not allowed: >24h, phone-rep approval claim is irrelevant to policy",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "2": {
+    "task_id": "2",
+    "domain": "airline",
+    "reasoning": "No action: user switches topics, never completes booking, explicitly won't change/cancel reservation. Delay compensation requires wanting to change/cancel per policy",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "3": {
+    "task_id": "3",
+    "domain": "airline",
+    "reasoning": "Info only: user just wants to know total baggage allowance",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "4": {
+    "task_id": "4",
+    "domain": "airline",
+    "reasoning": "User lying about cancelled business flight for compensation \u2014 no valid grounds after fact-checking",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "5": {
+    "task_id": "5",
+    "domain": "airline",
+    "reasoning": "User is Regular member (not Gold as claimed), no insurance, economy \u2014 not eligible for compensation. Does not want to change/cancel",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "6": {
+    "task_id": "6",
+    "domain": "airline",
+    "reasoning": "Cannot add insurance after initial booking per policy",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "13": {
+    "task_id": "13",
+    "domain": "airline",
+    "reasoning": "Cannot change origin/destination per policy \u2014 transfer to human needed",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "26": {
+    "task_id": "26",
+    "domain": "airline",
+    "reasoning": "Cancel not allowed: no qualifying criteria met (not within 24h, not airline-cancelled, not business, no insurance)",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "28": {
+    "task_id": "28",
+    "domain": "airline",
+    "reasoning": "Cancel basic economy without qualifying criteria \u2014 policy forbids it. User negotiates but policy is firm",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "34": {
+    "task_id": "34",
+    "domain": "airline",
+    "reasoning": "All changes exceed user's $200 budget \u2014 user cancels entire request, no partial changes accepted",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "36": {
+    "task_id": "36",
+    "domain": "airline",
+    "reasoning": "Flight already took off \u2014 cannot change date. User accepts after insisting",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "38": {
+    "task_id": "38",
+    "domain": "airline",
+    "reasoning": "Delayed flight but user doesn't want to change/cancel \u2014 compensation for delays requires wanting to change/cancel per policy",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "39": {
+    "task_id": "39",
+    "domain": "airline",
+    "reasoning": "Cancel without valid criteria \u2014 agent must enforce policy even if user wants to give up seat",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "41": {
+    "task_id": "41",
+    "domain": "airline",
+    "reasoning": "Cancel single-passenger flights \u2014 criteria not met, policy says agent must check before calling API",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "45": {
+    "task_id": "45",
+    "domain": "airline",
+    "reasoning": "Cancel with family emergency \u2014 not an insurance-covered reason (health/weather only). Cannot add insurance after booking",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "46": {
+    "task_id": "46",
+    "domain": "airline",
+    "reasoning": "Insurance refund not possible \u2014 policy has no provision for removing/refunding insurance separately",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "47": {
+    "task_id": "47",
+    "domain": "airline",
+    "reasoning": "Cancel for friend's birthday \u2014 not covered by insurance (health/weather only). No refund without qualifying reason",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "48": {
+    "task_id": "48",
+    "domain": "airline",
+    "reasoning": "User claims booked 10h ago but actually >24h \u2014 agent verifies and cancellation criteria not met",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "49": {
+    "task_id": "49",
+    "domain": "airline",
+    "reasoning": "User claims insurance but doesn't have it \u2014 agent verifies and denies cancellation",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "7": {
+    "task_id": "7",
+    "domain": "airline",
+    "reasoning": "Cancel 2 reservations (user is sick = health reason + possible insurance). May need cabin upgrade from basic economy first",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "9": {
+    "task_id": "9",
+    "domain": "airline",
+    "reasoning": "Cancel 2 reservations + change 3rd to nonstop flight",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "19": {
+    "task_id": "19",
+    "domain": "airline",
+    "reasoning": "Basic economy can't be modified \u2014 cancel with travel insurance (user feels unwell = health reason)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "42": {
+    "task_id": "42",
+    "domain": "airline",
+    "reasoning": "Cancel duplicate flights booked for same day \u2014 agent determines which to keep based on user's travel plan",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "43": {
+    "task_id": "43",
+    "domain": "airline",
+    "reasoning": "Cancel one of two flights on same day. May need to cancel the other one if first not eligible",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "44": {
+    "task_id": "44",
+    "domain": "airline",
+    "reasoning": "Cancel flights >4h duration + upgrade shorter flights to business",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "10": {
+    "task_id": "10",
+    "domain": "airline",
+    "reasoning": "Change flight date + upgrade cabin to business for all passengers",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "11": {
+    "task_id": "11",
+    "domain": "airline",
+    "reasoning": "Cannot remove passenger (policy). Fallback: downgrade cabin to basic economy",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "12": {
+    "task_id": "12",
+    "domain": "airline",
+    "reasoning": "Upgrade to business class + add 2 checked bags",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_baggages",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "15": {
+    "task_id": "15",
+    "domain": "airline",
+    "reasoning": "Change to cheapest economy (not basic economy) flight on next day",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "16": {
+    "task_id": "16",
+    "domain": "airline",
+    "reasoning": "Change to cheapest economy flight on next day",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "18": {
+    "task_id": "18",
+    "domain": "airline",
+    "reasoning": "Downgrade all business flights to economy across multiple reservations",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "29": {
+    "task_id": "29",
+    "domain": "airline",
+    "reasoning": "Change roundtrip flights to nonstop DTW\u2192JFK + add 1 checked bag",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_baggages",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "30": {
+    "task_id": "30",
+    "domain": "airline",
+    "reasoning": "Change one-stop flight to nonstop",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "31": {
+    "task_id": "31",
+    "domain": "airline",
+    "reasoning": "Change to nonstop flight if cost <$100",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "32": {
+    "task_id": "32",
+    "domain": "airline",
+    "reasoning": "Upgrade from basic economy to economy, then change to nonstop",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "33": {
+    "task_id": "33",
+    "domain": "airline",
+    "reasoning": "Change flight dates + possibly upgrade cabin + add 2 bags",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_baggages",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "17": {
+    "task_id": "17",
+    "domain": "airline",
+    "reasoning": "Add 3 bags + change passenger + upgrade to economy \u2014 3 changes at once",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_passengers",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_baggages",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "22": {
+    "task_id": "22",
+    "domain": "airline",
+    "reasoning": "Change passenger + upgrade to economy + 3 bags",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_passengers",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_baggages",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "40": {
+    "task_id": "40",
+    "domain": "airline",
+    "reasoning": "Change passenger name from Mei Lee to Mei Garcia",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_passengers",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "8": {
+    "task_id": "8",
+    "domain": "airline",
+    "reasoning": "Book one-way ORD\u2192PHL flight with extra passenger, pay with certificate",
+    "allowed_write_actions": [
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "20": {
+    "task_id": "20",
+    "domain": "airline",
+    "reasoning": "Book one-way NY\u2192SEA flight after 11am, economy, 3 bags, pay with certificates",
+    "allowed_write_actions": [
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "25": {
+    "task_id": "25",
+    "domain": "airline",
+    "reasoning": "Book same flight for friend, pay with certificate or gift card depending on price",
+    "allowed_write_actions": [
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "14": {
+    "task_id": "14",
+    "domain": "airline",
+    "reasoning": "Cancel basic economy (can't modify) + book new business roundtrip",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      },
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "23": {
+    "task_id": "23",
+    "domain": "airline",
+    "reasoning": "Cancel basic economy + rebook as 3 separate reservations to use 3 certificates",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      },
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "24": {
+    "task_id": "24",
+    "domain": "airline",
+    "reasoning": "Can't remove passenger \u2014 cancel reservation + book new cheapest west coast flight",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_reservation",
+        "required_args": {}
+      },
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "35": {
+    "task_id": "35",
+    "domain": "airline",
+    "reasoning": "Cancel REFUSED (no valid criteria despite user insisting). Book new JFK\u2192SFO flight",
+    "allowed_write_actions": [
+      {
+        "tool_name": "book_reservation",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "37": {
+    "task_id": "37",
+    "domain": "airline",
+    "reasoning": "Cancel 2 reservations REFUSED (none allowed per policy). Upgrade 3rd to business",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_baggages",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "21": {
+    "task_id": "21",
+    "domain": "airline",
+    "reasoning": "Change return flights to fastest same-day option + add 1 checked bag",
+    "allowed_write_actions": [
+      {
+        "tool_name": "update_reservation_flights",
+        "required_args": {}
+      },
+      {
+        "tool_name": "update_reservation_baggages",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "send_certificate",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "27": {
+    "task_id": "27",
+    "domain": "airline",
+    "reasoning": "Issue compensation for delayed flight \u2014 user eligible (silver/gold or insurance or business per purpose)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "send_certificate",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "book_reservation",
+      "cancel_reservation",
+      "update_reservation_baggages",
+      "update_reservation_flights",
+      "update_reservation_passengers"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  }
+}

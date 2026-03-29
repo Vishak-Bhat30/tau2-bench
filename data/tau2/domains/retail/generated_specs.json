@@ -1,0 +1,2594 @@
+{
+  "0": {
+    "task_id": "0",
+    "domain": "retail",
+    "reasoning": "Exchange keyboard + thermostat in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {
+          "order_id": "#W2378156"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "1": {
+    "task_id": "1",
+    "domain": "retail",
+    "reasoning": "Exchange keyboard + thermostat in delivered order (variant preferences)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {
+          "order_id": "#W2378156"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "2": {
+    "task_id": "2",
+    "domain": "retail",
+    "reasoning": "Return cleaner, headphone, smart watch from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "3": {
+    "task_id": "3",
+    "domain": "retail",
+    "reasoning": "Modify pending small tshirts to purple polyester",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "4": {
+    "task_id": "4",
+    "domain": "retail",
+    "reasoning": "Modify pending tshirts to purple s-size polyester",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "5": {
+    "task_id": "5",
+    "domain": "retail",
+    "reasoning": "Exchange water bottle + desk lamp in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "6": {
+    "task_id": "6",
+    "domain": "retail",
+    "reasoning": "Exchange water bottle + desk lamp (preference variant)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "7": {
+    "task_id": "7",
+    "domain": "retail",
+    "reasoning": "Exchange water bottle + desk lamp (preference variant)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "8": {
+    "task_id": "8",
+    "domain": "retail",
+    "reasoning": "Exchange water bottle + desk lamp (preference variant)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "9": {
+    "task_id": "9",
+    "domain": "retail",
+    "reasoning": "Exchange water bottle + desk lamp, user changes mind at confirmation",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "10": {
+    "task_id": "10",
+    "domain": "retail",
+    "reasoning": "Return ALL items from 2 delivered orders. Transfer if refund method not possible",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": true
+  },
+  "11": {
+    "task_id": "11",
+    "domain": "retail",
+    "reasoning": "Return ALL items from 2 delivered orders with original payment",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "12": {
+    "task_id": "12",
+    "domain": "retail",
+    "reasoning": "Cancel/return non-gaming items. Transfer if PayPal not possible",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": true
+  },
+  "13": {
+    "task_id": "13",
+    "domain": "retail",
+    "reasoning": "Cancel/return non-gaming items",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "14": {
+    "task_id": "14",
+    "domain": "retail",
+    "reasoning": "Cancel/return gaming items (keyboard + mouse)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "15": {
+    "task_id": "15",
+    "domain": "retail",
+    "reasoning": "Modify pending boots to size 8",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "16": {
+    "task_id": "16",
+    "domain": "retail",
+    "reasoning": "Cancel all pending orders + return delivered watch",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "17": {
+    "task_id": "17",
+    "domain": "retail",
+    "reasoning": "Change shipping address for pending order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {
+          "order_id": "#W8665881"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "18": {
+    "task_id": "18",
+    "domain": "retail",
+    "reasoning": "Exchange office chair (return\u2192exchange after mind change)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "19": {
+    "task_id": "19",
+    "domain": "retail",
+    "reasoning": "Return water bottle + exchange pet bed and office chair to cheapest",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "20": {
+    "task_id": "20",
+    "domain": "retail",
+    "reasoning": "Upgrade all items to most expensive variants (pending=modify, delivered=exchange)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "21": {
+    "task_id": "21",
+    "domain": "retail",
+    "reasoning": "Exchange shoes + modify another item in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "22": {
+    "task_id": "22",
+    "domain": "retail",
+    "reasoning": "Change all order addresses + user default address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "23": {
+    "task_id": "23",
+    "domain": "retail",
+    "reasoning": "Exchange helmet + luggage set (delivered) + modify grill (pending)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "24": {
+    "task_id": "24",
+    "domain": "retail",
+    "reasoning": "User mentions cancel then backs out. Info query about t-shirts",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "25": {
+    "task_id": "25",
+    "domain": "retail",
+    "reasoning": "Return items except pet bed from delivered order. Transfer if amex refund fails",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": true
+  },
+  "26": {
+    "task_id": "26",
+    "domain": "retail",
+    "reasoning": "Return items except pet bed from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "27": {
+    "task_id": "27",
+    "domain": "retail",
+    "reasoning": "Return hose + backpack, exchange hiking boots (same order, delivered)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "28": {
+    "task_id": "28",
+    "domain": "retail",
+    "reasoning": "Return multiple items across delivered orders",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "29": {
+    "task_id": "29",
+    "domain": "retail",
+    "reasoning": "Exchange skateboard + garden hose in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "30": {
+    "task_id": "30",
+    "domain": "retail",
+    "reasoning": "Exchange/return tablet + cancel charger order + return sneaker",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "31": {
+    "task_id": "31",
+    "domain": "retail",
+    "reasoning": "Cancel charger + cancel boot (pending) + return sneaker (delivered)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "32": {
+    "task_id": "32",
+    "domain": "retail",
+    "reasoning": "Cancel charger + cancel boot+kettle (pending) + return sneaker (delivered)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "33": {
+    "task_id": "33",
+    "domain": "retail",
+    "reasoning": "Return office items or modify user address (partial cancel not possible)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "34": {
+    "task_id": "34",
+    "domain": "retail",
+    "reasoning": "Return office items or change pending order address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "35": {
+    "task_id": "35",
+    "domain": "retail",
+    "reasoning": "Return delivered speaker + modify pending laptop",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "36": {
+    "task_id": "36",
+    "domain": "retail",
+    "reasoning": "Modify items to cheapest or cancel if not possible",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "37": {
+    "task_id": "37",
+    "domain": "retail",
+    "reasoning": "Modify items to cheapest or cancel entire order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "38": {
+    "task_id": "38",
+    "domain": "retail",
+    "reasoning": "Cancel pending order (over credit limit)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "39": {
+    "task_id": "39",
+    "domain": "retail",
+    "reasoning": "Update default user address + info query",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "40": {
+    "task_id": "40",
+    "domain": "retail",
+    "reasoning": "Change payment method on pending order to visa",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_payment",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "41": {
+    "task_id": "41",
+    "domain": "retail",
+    "reasoning": "Modify jigsaw + fix order addresses + fix user address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "42": {
+    "task_id": "42",
+    "domain": "retail",
+    "reasoning": "Fix addresses + modify jigsaw to easiest",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "43": {
+    "task_id": "43",
+    "domain": "retail",
+    "reasoning": "Check order info + modify default address to daughter's",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "44": {
+    "task_id": "44",
+    "domain": "retail",
+    "reasoning": "Modify desk lamp to cheapest in pending order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {
+          "order_id": "#W9300146"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "45": {
+    "task_id": "45",
+    "domain": "retail",
+    "reasoning": "Exchange vacuum cleaner for canister type",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "46": {
+    "task_id": "46",
+    "domain": "retail",
+    "reasoning": "Return air purifier + robotic vacuum from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "47": {
+    "task_id": "47",
+    "domain": "retail",
+    "reasoning": "Return air purifier + canister vacuum from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "48": {
+    "task_id": "48",
+    "domain": "retail",
+    "reasoning": "Return air purifier from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "49": {
+    "task_id": "49",
+    "domain": "retail",
+    "reasoning": "Exchange wireless earbud to cheapest same-order item",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "50": {
+    "task_id": "50",
+    "domain": "retail",
+    "reasoning": "Undo cancellation \u2014 not possible per policy. Transfer to human",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": true
+  },
+  "51": {
+    "task_id": "51",
+    "domain": "retail",
+    "reasoning": "Return digital camera from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "52": {
+    "task_id": "52",
+    "domain": "retail",
+    "reasoning": "Exchange camera for max zoom capacity",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "53": {
+    "task_id": "53",
+    "domain": "retail",
+    "reasoning": "Return damaged bicycle for refund",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "54": {
+    "task_id": "54",
+    "domain": "retail",
+    "reasoning": "Cancel/return all except boots. Exchange boots for cheaper if available",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "55": {
+    "task_id": "55",
+    "domain": "retail",
+    "reasoning": "Cancel all pending + return all delivered",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "56": {
+    "task_id": "56",
+    "domain": "retail",
+    "reasoning": "Modify air purifier in pending order to cheapest",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "57": {
+    "task_id": "57",
+    "domain": "retail",
+    "reasoning": "Cancel pending order if can't remove single item",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "58": {
+    "task_id": "58",
+    "domain": "retail",
+    "reasoning": "Exchange coffee machine + laptop in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "59": {
+    "task_id": "59",
+    "domain": "retail",
+    "reasoning": "Cancel older pending order + change address on other",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "60": {
+    "task_id": "60",
+    "domain": "retail",
+    "reasoning": "Change earbuds in order (could be pending or delivered)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {
+          "order_id": "W5061109"
+        }
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {
+          "order_id": "W5061109"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "61": {
+    "task_id": "61",
+    "domain": "retail",
+    "reasoning": "Change earbuds in order (could be pending or delivered)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {
+          "order_id": "W5061109"
+        }
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {
+          "order_id": "W5061109"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "62": {
+    "task_id": "62",
+    "domain": "retail",
+    "reasoning": "Modify bluetooth speaker in pending order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "63": {
+    "task_id": "63",
+    "domain": "retail",
+    "reasoning": "Modify bluetooth speaker in pending order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "64": {
+    "task_id": "64",
+    "domain": "retail",
+    "reasoning": "Exchange camera for highest resolution waterproof",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "65": {
+    "task_id": "65",
+    "domain": "retail",
+    "reasoning": "Exchange bookshelf for camera \u2014 cross-product, may not be possible",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": true
+  },
+  "66": {
+    "task_id": "66",
+    "domain": "retail",
+    "reasoning": "Can't exchange cross-product (luggage\u2192coat). Return or cancel",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": true
+  },
+  "67": {
+    "task_id": "67",
+    "domain": "retail",
+    "reasoning": "Info only: check order payment amount",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "68": {
+    "task_id": "68",
+    "domain": "retail",
+    "reasoning": "Info only: check order payment amount",
+    "allowed_write_actions": [],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": 0,
+    "transfer_to_human": false
+  },
+  "69": {
+    "task_id": "69",
+    "domain": "retail",
+    "reasoning": "Return laptop from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "70": {
+    "task_id": "70",
+    "domain": "retail",
+    "reasoning": "Exchange helmet for medium, high ventilation",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "71": {
+    "task_id": "71",
+    "domain": "retail",
+    "reasoning": "Modify pending order address + modify items (lamp + backpack)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "72": {
+    "task_id": "72",
+    "domain": "retail",
+    "reasoning": "Modify pending order address + modify items (lamp + backpack)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "73": {
+    "task_id": "73",
+    "domain": "retail",
+    "reasoning": "Return everything except coffee machine from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "74": {
+    "task_id": "74",
+    "domain": "retail",
+    "reasoning": "Exchange delivered laptop + cancel pending order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "75": {
+    "task_id": "75",
+    "domain": "retail",
+    "reasoning": "Exchange earbuds in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {
+          "order_id": "#W6908222"
+        }
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "76": {
+    "task_id": "76",
+    "domain": "retail",
+    "reasoning": "Cancel pending order(s)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "77": {
+    "task_id": "77",
+    "domain": "retail",
+    "reasoning": "Exchange perfume for largest size",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "78": {
+    "task_id": "78",
+    "domain": "retail",
+    "reasoning": "Modify address + exchange makeup + cancel order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "79": {
+    "task_id": "79",
+    "domain": "retail",
+    "reasoning": "Modify water bottle in pending order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "80": {
+    "task_id": "80",
+    "domain": "retail",
+    "reasoning": "Exchange t-shirt in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "81": {
+    "task_id": "81",
+    "domain": "retail",
+    "reasoning": "Cancel pending order (items no longer needed)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "82": {
+    "task_id": "82",
+    "domain": "retail",
+    "reasoning": "Return more expensive tablet from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "83": {
+    "task_id": "83",
+    "domain": "retail",
+    "reasoning": "Return more expensive tablet from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "84": {
+    "task_id": "84",
+    "domain": "retail",
+    "reasoning": "Return tablet (changes mind on which one at confirmation)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "85": {
+    "task_id": "85",
+    "domain": "retail",
+    "reasoning": "Exchange fleece jacket for large red half-zip",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "86": {
+    "task_id": "86",
+    "domain": "retail",
+    "reasoning": "Exchange fleece jacket + update user address to DC address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "87": {
+    "task_id": "87",
+    "domain": "retail",
+    "reasoning": "Modify all pending order addresses + user address to DC",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "88": {
+    "task_id": "88",
+    "domain": "retail",
+    "reasoning": "Modify bookshelf to 4 foot, or cancel entire order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "89": {
+    "task_id": "89",
+    "domain": "retail",
+    "reasoning": "Exchange or return keyboard depending on cheapest available price",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "90": {
+    "task_id": "90",
+    "domain": "retail",
+    "reasoning": "Modify camera to 10x zoom, or cancel order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "91": {
+    "task_id": "91",
+    "domain": "retail",
+    "reasoning": "Return skateboards + watch, exchange/return e-reader",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "92": {
+    "task_id": "92",
+    "domain": "retail",
+    "reasoning": "Return skateboards + watch + e-reader",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "93": {
+    "task_id": "93",
+    "domain": "retail",
+    "reasoning": "Exchange laptop to i7/8GB/1TB",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "94": {
+    "task_id": "94",
+    "domain": "retail",
+    "reasoning": "Exchange laptop to i7/8GB/1TB",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "95": {
+    "task_id": "95",
+    "domain": "retail",
+    "reasoning": "Exchange 2 laptops to i7/8GB/1TB",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "96": {
+    "task_id": "96",
+    "domain": "retail",
+    "reasoning": "Modify pending order address + exchange bluetooth speaker",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "97": {
+    "task_id": "97",
+    "domain": "retail",
+    "reasoning": "Modify pending order address + exchange bluetooth speaker",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "98": {
+    "task_id": "98",
+    "domain": "retail",
+    "reasoning": "Exchange bicycle + jigsaw + camera (delivered) + cancel skateboard (pending)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "99": {
+    "task_id": "99",
+    "domain": "retail",
+    "reasoning": "Exchange bicycle + jigsaw + camera (delivered) + cancel skateboard (pending)",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "100": {
+    "task_id": "100",
+    "domain": "retail",
+    "reasoning": "Exchange luggage + skateboard, return boots, modify pending items",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "101": {
+    "task_id": "101",
+    "domain": "retail",
+    "reasoning": "Modify pending watch + address, exchange delivered purifier",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "102": {
+    "task_id": "102",
+    "domain": "retail",
+    "reasoning": "Modify pending watch + address, exchange delivered purifier",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "103": {
+    "task_id": "103",
+    "domain": "retail",
+    "reasoning": "Return bookshelf+jigsaw+backpack, modify pending order item+address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "104": {
+    "task_id": "104",
+    "domain": "retail",
+    "reasoning": "Return bookshelves+jigsaws+backpack, modify pending order item+address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "105": {
+    "task_id": "105",
+    "domain": "retail",
+    "reasoning": "Exchange 2 tea kettles in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "106": {
+    "task_id": "106",
+    "domain": "retail",
+    "reasoning": "Exchange t-shirt one size smaller",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "107": {
+    "task_id": "107",
+    "domain": "retail",
+    "reasoning": "Exchange hiking boots + jigsaw in delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "108": {
+    "task_id": "108",
+    "domain": "retail",
+    "reasoning": "Return everything except tablet from delivered order",
+    "allowed_write_actions": [
+      {
+        "tool_name": "return_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "109": {
+    "task_id": "109",
+    "domain": "retail",
+    "reasoning": "Exchange tablet + modify order address + modify user address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "110": {
+    "task_id": "110",
+    "domain": "retail",
+    "reasoning": "Exchange tablet + modify order address + modify user address",
+    "allowed_write_actions": [
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_user_address",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "111": {
+    "task_id": "111",
+    "domain": "retail",
+    "reasoning": "Modify pending laptop + address, exchange delivered watch",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "112": {
+    "task_id": "112",
+    "domain": "retail",
+    "reasoning": "Modify pending laptop + address, exchange delivered watch",
+    "allowed_write_actions": [
+      {
+        "tool_name": "modify_pending_order_items",
+        "required_args": {}
+      },
+      {
+        "tool_name": "modify_pending_order_address",
+        "required_args": {}
+      },
+      {
+        "tool_name": "exchange_delivered_order_items",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "cancel_pending_order",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  },
+  "113": {
+    "task_id": "113",
+    "domain": "retail",
+    "reasoning": "Cancel all pending orders",
+    "allowed_write_actions": [
+      {
+        "tool_name": "cancel_pending_order",
+        "required_args": {}
+      }
+    ],
+    "forbidden_write_tools": [
+      "exchange_delivered_order_items",
+      "modify_pending_order_address",
+      "modify_pending_order_items",
+      "modify_pending_order_payment",
+      "modify_user_address",
+      "return_delivered_order_items"
+    ],
+    "max_write_calls": null,
+    "transfer_to_human": false
+  }
+}

@@ -27,6 +27,7 @@ from tau2.environment.environment import Environment
 from tau2.orchestrator.full_duplex_orchestrator import FullDuplexOrchestrator
 from tau2.orchestrator.orchestrator import Orchestrator
 from tau2.registry import registry
+from tau2.verifier.verifier import ToolCallVerifier, create_verifier_for_task
 from tau2.user.user_simulator import DummyUser, UserSimulator
 from tau2.user.user_simulator_base import FullDuplexUser, HalfDuplexUser
 from tau2.user_simulation_voice_presets import (
@@ -382,6 +383,19 @@ def build_text_orchestrator(
         solo_mode=solo_mode,
     )
 
+    # Optionally create tool call verifier
+    tool_call_verifier = None
+    if getattr(config, "enable_tool_call_verifier", False):
+        tool_call_verifier = create_verifier_for_task(
+            task_id=task.id,
+            domain=domain,
+            environment=environment,
+        )
+        if tool_call_verifier:
+            logger.info(
+                f"Tool call verifier enabled for task {task.id} in domain {domain}"
+            )
+
     orchestrator = Orchestrator(
         domain=domain,
         agent=agent,
@@ -395,6 +409,7 @@ def build_text_orchestrator(
         simulation_id=simulation_id,
         validate_communication=config.enforce_communication_protocol,
         timeout=config.timeout,
+        tool_call_verifier=tool_call_verifier,
     )
 
     logger.debug(

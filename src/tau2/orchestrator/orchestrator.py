@@ -36,6 +36,7 @@ from tau2.user.user_simulator_base import (
 )
 from tau2.utils.llm_utils import get_cost
 from tau2.utils.utils import format_time, get_now
+from tau2.verifier.verifier import ToolCallVerifier
 
 
 class Role(str, Enum):
@@ -314,14 +315,28 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         """
         Execute tool calls and return results.
 
+        If a tool_call_verifier is set (on Orchestrator subclass), each tool call
+        is validated before execution. On violation, an error ToolMessage with
+        feedback is returned instead of executing the tool.
+
         Args:
             tool_calls: List of tool calls to execute.
 
         Returns:
             List of ToolMessage results from the environment.
         """
+        verifier = getattr(self, "tool_call_verifier", None)
+
         tool_results = []
         for tool_call in tool_calls:
+            if verifier is not None and tool_call.requestor == "assistant":
+                result = verifier.verify(tool_call)
+                if not result.is_valid:
+                    feedback_msg = verifier.make_feedback_message(tool_call, result)
+                    self.num_errors += 1
+                    tool_results.append(feedback_msg)
+                    continue
+
             tool_result = self.environment.get_response(tool_call)
             if tool_result.error:
                 self.num_errors += 1
@@ -405,6 +420,7 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
         simulation_id: Optional[str] = None,
         validate_communication: bool = False,
         timeout: Optional[float] = None,
+        tool_call_verifier: Optional[ToolCallVerifier] = None,
     ):
         """
         Initialize the Orchestrator for managing simulation between Agent, User, and Environment.
@@ -428,6 +444,9 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
             validate_communication: If True, validates communication protocol rules (e.g., no mixed
                                    messages with both text and tool calls). Defaults to False.
             timeout: Maximum wallclock time in seconds. None means no timeout.
+            tool_call_verifier: Optional ToolCallVerifier to validate tool calls against a spec
+                               before execution. When set and a violation is detected, returns
+                               feedback as an error ToolMessage instead of executing the tool.
         """
         # Initialize base class
         super().__init__(
@@ -453,6 +472,9 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
         self.from_role: Optional[Role] = None
         self.to_role: Optional[Role] = None
         self.message: Optional[Message] = None
+
+        # Optional tool call verifier
+        self.tool_call_verifier: Optional[ToolCallVerifier] = tool_call_verifier
 
         # Validate mode compatibility
         self._validate_mode_compatibility()

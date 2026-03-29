@@ -565,6 +565,13 @@ class TextRunConfig(BaseRunConfig):
             default=None,
         ),
     ]
+    enable_tool_call_verifier: Annotated[
+        bool,
+        Field(
+            description="Whether to enable the tool call verifier that validates agent tool calls against task specs during simulation.",
+            default=False,
+        ),
+    ]
 
     # ---- Properties ----
 

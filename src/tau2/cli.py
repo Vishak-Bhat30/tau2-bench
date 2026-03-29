@@ -218,6 +218,13 @@ def add_run_args(parser):
         help="Enforce communication protocol rules (e.g., no mixed messages with text and tool calls). Default is False.",
     )
     parser.add_argument(
+        "--enable-tool-call-verifier",
+        action="store_true",
+        default=False,
+        help="Enable the tool call verifier that validates agent tool calls against task specs during simulation. "
+        "When a violation is detected, returns feedback to the agent instead of executing the tool.",
+    )
+    parser.add_argument(
         "--user-persona",
         type=json.loads,
         default=None,
@@ -664,6 +671,7 @@ def main():
                 user=args.user,
                 max_steps=args.max_steps,
                 enforce_communication_protocol=args.enforce_communication_protocol,
+                enable_tool_call_verifier=args.enable_tool_call_verifier,
             )
 
         return run_domain(config)
