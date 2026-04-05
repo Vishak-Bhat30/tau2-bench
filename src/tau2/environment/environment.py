@@ -356,6 +356,9 @@ class Environment:
 
         action_responses = get_actions_from_messages(message_history)
         for tool_call, expected_response in action_responses:
+            # Skip verifier feedback messages during replay
+            if isinstance(expected_response.content, str) and "[VERIFIER]" in expected_response.content:
+                continue
             if not self._has_tool(tool_call.name):
                 raise ValueError(
                     f"Unknown tool '{tool_call.name}' encountered during replay. "
