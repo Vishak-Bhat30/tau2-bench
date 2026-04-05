@@ -1,0 +1,1016 @@
+"""
+Airline Policy Spec — verifiable rules extracted from policy.md.
+
+Each rule is a function that takes:
+  - tool_name: str           (the tool being called)
+  - tool_args: dict          (the arguments passed to the tool)
+  - conversation: list[dict] (recent message history for SLM extraction)
+  - db: FlightDB             (current database state for lookups)
+
+And returns:
+  - None            if the call is ALLOWED (rule passes or doesn't apply)
+  - str             a feedback message explaining the violation
+
+The top-level `check_all` function runs every applicable rule and returns
+the first violation found, or None if all pass.
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import datetime, timedelta
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+# Current simulation time (from policy.md)
+CURRENT_TIME = datetime(2024, 5, 15, 15, 0, 0)
+
+
+# ============================================================================
+#  Helpers
+# ============================================================================
+
+def _get_reservation(db, reservation_id: str):
+    """Safely get a reservation from the DB."""
+    return db.reservations.get(reservation_id)
+
+
+def _get_user(db, user_id: str):
+    """Safely get a user from the DB."""
+    return db.users.get(user_id)
+
+
+def _has_flown_flights(reservation) -> bool:
+    """Check if any flight in the reservation has already departed."""
+    for f in reservation.flights:
+        # Compare flight date to current time
+        try:
+            flight_date = datetime.strptime(f.date, "%Y-%m-%d")
+            if flight_date.date() < CURRENT_TIME.date():
+                return True
+        except (ValueError, AttributeError):
+            pass
+    return False
+
+
+def _free_bags(membership: str, cabin: str) -> int:
+    """Return number of free checked bags per passenger."""
+    table = {
+        ("regular", "basic_economy"): 0,
+        ("regular", "economy"): 1,
+        ("regular", "business"): 2,
+        ("silver", "basic_economy"): 1,
+        ("silver", "economy"): 2,
+        ("silver", "business"): 3,
+        ("gold", "basic_economy"): 2,
+        ("gold", "economy"): 3,
+        ("gold", "business"): 4,
+    }
+    return table.get((membership, cabin), 0)
+
+
+# ============================================================================
+#  BOOK RESERVATION rules
+# ============================================================================
+
+def rule_book_max_passengers(tool_name, tool_args, conversation, db):
+    """Each reservation can have at most five passengers."""
+    if tool_name != "book_reservation":
+        return None
+    passengers = tool_args.get("passengers", [])
+    if len(passengers) > 5:
+        return (
+            f"Policy violation: booking has {len(passengers)} passengers, "
+            f"but maximum is 5 per reservation."
+        )
+    return None
+
+
+def rule_book_payment_limits(tool_name, tool_args, conversation, db):
+    """At most 1 certificate, 1 credit card, 3 gift cards."""
+    if tool_name != "book_reservation":
+        return None
+    payments = tool_args.get("payment_methods", [])
+    user_id = tool_args.get("user_id", "")
+    user = _get_user(db, user_id)
+    if not user:
+        return None  # let the tool itself error on missing user
+
+    cert_count = 0
+    cc_count = 0
+    gc_count = 0
+    for p in payments:
+        pid = p.get("payment_id", "") if isinstance(p, dict) else getattr(p, "payment_id", "")
+        pm = user.payment_methods.get(pid)
+        if pm is None:
+            return f"Policy violation: payment method '{pid}' is not in the user's profile."
+        source = getattr(pm, "source", "")
+        if source == "certificate":
+            cert_count += 1
+        elif source == "credit_card":
+            cc_count += 1
+        elif source == "gift_card":
+            gc_count += 1
+
+    violations = []
+    if cert_count > 1:
+        violations.append(f"at most 1 travel certificate (found {cert_count})")
+    if cc_count > 1:
+        violations.append(f"at most 1 credit card (found {cc_count})")
+    if gc_count > 3:
+        violations.append(f"at most 3 gift cards (found {gc_count})")
+    if violations:
+        return "Policy violation: " + "; ".join(violations) + "."
+    return None
+
+
+def rule_book_payment_in_profile(tool_name, tool_args, conversation, db):
+    """All payment methods must already be in user profile."""
+    if tool_name != "book_reservation":
+        return None
+    user_id = tool_args.get("user_id", "")
+    user = _get_user(db, user_id)
+    if not user:
+        return None
+    for p in tool_args.get("payment_methods", []):
+        pid = p.get("payment_id", "") if isinstance(p, dict) else getattr(p, "payment_id", "")
+        if pid not in user.payment_methods:
+            return f"Policy violation: payment method '{pid}' is not in the user's profile."
+    return None
+
+
+def rule_book_baggage_count(tool_name, tool_args, conversation, db):
+    """Validate free/nonfree baggage counts against membership + cabin."""
+    if tool_name != "book_reservation":
+        return None
+    user_id = tool_args.get("user_id", "")
+    user = _get_user(db, user_id)
+    if not user:
+        return None
+
+    cabin = tool_args.get("cabin", "")
+    passengers = tool_args.get("passengers", [])
+    n_passengers = len(passengers)
+    total_bags = tool_args.get("total_baggages", 0)
+    nonfree_bags = tool_args.get("nonfree_baggages", 0)
+
+    free_per_pax = _free_bags(user.membership, cabin)
+    max_free = free_per_pax * n_passengers
+
+    expected_nonfree = max(0, total_bags - max_free)
+    if nonfree_bags != expected_nonfree:
+        return (
+            f"Policy violation: with {n_passengers} passengers, "
+            f"membership='{user.membership}', cabin='{cabin}', "
+            f"free bags={max_free}, total_bags={total_bags}, "
+            f"nonfree should be {expected_nonfree} but got {nonfree_bags}."
+        )
+    return None
+
+
+def rule_book_cabin_uniform(tool_name, tool_args, conversation, db):
+    """Cabin class must be the same across all flights — single cabin arg."""
+    # The API already enforces this via a single `cabin` parameter,
+    # so this is inherently satisfied. No check needed.
+    return None
+
+
+# NOTE: user_confirmation rules removed — the SLM cannot reliably detect
+# implicit confirmations in the tau2 conversation format, causing far more
+# false-positive blocks than genuine catches.
+
+
+# ============================================================================
+#  MODIFY RESERVATION — flight changes
+# ============================================================================
+
+def rule_modify_basic_economy_no_flight_change(tool_name, tool_args, conversation, db):
+    """Basic economy flights cannot be modified (flight changes)."""
+    if tool_name != "update_reservation_flights":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    # If the existing cabin is basic_economy AND the new cabin is also basic_economy,
+    # then the flights are being modified on a basic economy reservation → not allowed.
+    new_cabin = tool_args.get("cabin", "")
+    if reservation.cabin == "basic_economy" and new_cabin == "basic_economy":
+        return (
+            "Policy violation: basic economy flights cannot be modified. "
+            "Only cabin upgrades/downgrades are allowed."
+        )
+    return None
+
+
+def rule_modify_no_change_origin_dest_type(tool_name, tool_args, conversation, db):
+    """Modifications cannot change origin, destination, or trip type."""
+    if tool_name != "update_reservation_flights":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    # Check if only cabin is changing (all flights same) — cabin change is OK
+    new_flights = tool_args.get("flights", [])
+    old_flight_set = {(f.flight_number, f.date) for f in reservation.flights}
+    new_flight_set = set()
+    for f in new_flights:
+        fn = f.get("flight_number", "") if isinstance(f, dict) else getattr(f, "flight_number", "")
+        dt = f.get("date", "") if isinstance(f, dict) else getattr(f, "date", "")
+        new_flight_set.add((fn, dt))
+
+    # If flights are identical, this is a cabin-only change → allowed
+    if old_flight_set == new_flight_set:
+        return None
+
+    # Flights are changing — verify origin/destination/trip_type preserved
+    # We can't easily verify origin/dest from flight numbers without DB lookup,
+    # so use SLM to check conversation intent
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "Is the user trying to change the origin city, destination city, or trip type "
+        "(one-way vs round-trip) of their reservation? Answer ONLY 'yes' or 'no'.",
+        conversation,
+    )
+    if answer.lower().strip() == "yes":
+        return (
+            "Policy violation: flight modifications cannot change the origin, "
+            "destination, or trip type. The user should cancel and rebook instead."
+        )
+    return None
+
+
+def rule_modify_cabin_no_flown_flights(tool_name, tool_args, conversation, db):
+    """Cabin cannot be changed if any flight has already been flown."""
+    if tool_name != "update_reservation_flights":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    new_cabin = tool_args.get("cabin", "")
+    if new_cabin != reservation.cabin:
+        # Cabin is changing — check if any flights have been flown
+        if _has_flown_flights(reservation):
+            return (
+                "Policy violation: cabin cannot be changed because some flights "
+                "in this reservation have already been flown."
+            )
+    return None
+
+
+def rule_modify_payment_method(tool_name, tool_args, conversation, db):
+    """Flight changes require a single gift card or credit card for payment."""
+    if tool_name != "update_reservation_flights":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    payment_id = tool_args.get("payment_id", "")
+    if not payment_id:
+        return None  # tool will handle missing payment
+
+    user = _get_user(db, reservation.user_id)
+    if not user:
+        return None
+
+    pm = user.payment_methods.get(payment_id)
+    if pm is None:
+        return f"Policy violation: payment method '{payment_id}' is not in the user's profile."
+
+    source = getattr(pm, "source", "")
+    if source == "certificate":
+        return (
+            "Policy violation: certificates cannot be used for flight modification payments. "
+            "Use a credit card or gift card."
+        )
+    return None
+
+
+
+
+
+# ============================================================================
+#  MODIFY RESERVATION — baggage
+# ============================================================================
+
+def rule_baggage_no_removal(tool_name, tool_args, conversation, db):
+    """Users can add but not remove checked bags."""
+    if tool_name != "update_reservation_baggages":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    new_total = tool_args.get("total_baggages", 0)
+    if new_total < reservation.total_baggages:
+        return (
+            f"Policy violation: cannot remove checked bags. "
+            f"Current: {reservation.total_baggages}, requested: {new_total}."
+        )
+    return None
+
+
+def rule_baggage_no_insurance_after_booking(tool_name, tool_args, conversation, db):
+    """Insurance cannot be added after initial booking.
+    (This isn't directly a baggage rule, but the user might try via conversation.)
+    We check via SLM if the agent is being asked to add insurance."""
+    # This rule applies to any write tool — but insurance is only on booking
+    # The API doesn't have an "add insurance" endpoint, so we check conversation
+    if tool_name not in ("update_reservation_baggages", "update_reservation_flights"):
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "Is the agent trying to add travel insurance to an existing reservation? "
+        "Answer ONLY 'yes' or 'no'.",
+        conversation,
+    )
+    if answer.lower().strip() == "yes":
+        return "Policy violation: travel insurance cannot be added after initial booking."
+    return None
+
+
+
+
+
+# ============================================================================
+#  MODIFY RESERVATION — passengers
+# ============================================================================
+
+def rule_passengers_no_count_change(tool_name, tool_args, conversation, db):
+    """Cannot modify the number of passengers (even human agents can't)."""
+    if tool_name != "update_reservation_passengers":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    new_pax = tool_args.get("passengers", [])
+    if len(new_pax) != len(reservation.passengers):
+        return (
+            f"Policy violation: cannot change the number of passengers. "
+            f"Current: {len(reservation.passengers)}, requested: {len(new_pax)}. "
+            f"Even a human agent cannot modify the number of passengers."
+        )
+    return None
+
+
+
+
+
+# ============================================================================
+#  CANCEL RESERVATION
+# ============================================================================
+
+def rule_cancel_flown_flights(tool_name, tool_args, conversation, db):
+    """Cannot cancel if any flight has already been flown — transfer needed."""
+    if tool_name != "cancel_reservation":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    if _has_flown_flights(reservation):
+        return (
+            "Policy violation: cannot cancel reservation because some flights "
+            "have already been flown. Transfer to a human agent instead."
+        )
+    return None
+
+
+def rule_cancel_eligibility(tool_name, tool_args, conversation, db):
+    """
+    Flight can only be cancelled if one of these is true:
+    - Booking made within last 24 hours
+    - Flight cancelled by airline
+    - Business class flight
+    - User has travel insurance AND reason covered by insurance (health/weather)
+
+    Uses SLM to extract cancellation reason from conversation.
+    """
+    if tool_name != "cancel_reservation":
+        return None
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    # Check: business class → always cancellable
+    if reservation.cabin == "business":
+        return None
+
+    # Check: booked within 24 hours
+    try:
+        created = datetime.strptime(reservation.created_at, "%Y-%m-%dT%H:%M:%S")
+        if (CURRENT_TIME - created) <= timedelta(hours=24):
+            return None
+    except (ValueError, AttributeError):
+        pass
+
+    # Check: airline cancelled the flight
+    # We need to check flight status from DB
+    from tau2.verifier.slm_helper import slm_extract
+    answer_airline_cancel = slm_extract(
+        "Based on the conversation, was the user's flight cancelled by the airline? "
+        "Answer ONLY 'yes' or 'no'.",
+        conversation,
+    )
+    if answer_airline_cancel.lower().strip() == "yes":
+        return None
+
+    # Check: travel insurance + covered reason
+    if reservation.insurance == "yes":
+        answer_reason = slm_extract(
+            "What is the reason the user wants to cancel or change their flight? "
+            "Consider the ENTIRE conversation, not just the last message. "
+            "Is the user mentioning any health issue, illness, sickness, medical reason, "
+            "or bad weather? "
+            "Answer with one of: 'health', 'weather', 'change_of_plan', 'other'.",
+            conversation,
+        )
+        reason = answer_reason.lower().strip()
+        if reason in ("health", "weather"):
+            return None
+
+    # None of the conditions met
+    return (
+        "Policy violation: cancellation not allowed. The reservation is not business class, "
+        "was not booked within 24 hours, the flight was not cancelled by the airline, "
+        "and the user either has no travel insurance or the cancellation reason is not covered. "
+        "You should inform the user that cancellation is not possible under current policy."
+    )
+
+
+
+
+
+# ============================================================================
+#  SEND CERTIFICATE (compensation)
+# ============================================================================
+
+def rule_certificate_eligibility(tool_name, tool_args, conversation, db):
+    """
+    Only compensate if user is silver/gold member OR has travel insurance
+    OR flies business. Regular members with no insurance in (basic) economy
+    get nothing.
+    """
+    if tool_name != "send_certificate":
+        return None
+    user_id = tool_args.get("user_id", "")
+    user = _get_user(db, user_id)
+    if not user:
+        return None
+
+    # Check membership
+    if user.membership in ("silver", "gold"):
+        return None  # eligible
+
+    # Check if any reservation has insurance or is business
+    # Use SLM to identify which reservation the complaint is about
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "What reservation ID is the user complaining about? "
+        "Answer with ONLY the reservation ID (e.g. 'ABC123'), or 'unknown' if unclear.",
+        conversation,
+    )
+    res_id = answer.strip().strip("'\"")
+    reservation = _get_reservation(db, res_id)
+    if reservation:
+        if reservation.insurance == "yes":
+            return None  # eligible
+        if reservation.cabin == "business":
+            return None  # eligible
+
+    return (
+        "Policy violation: cannot compensate this user. They are a regular member "
+        "with no travel insurance and not flying business class."
+    )
+
+
+def rule_certificate_amount(tool_name, tool_args, conversation, db):
+    """
+    Certificate amounts:
+    - Cancelled flight complaint: $100 × number of passengers
+    - Delayed flight complaint:   $50 × number of passengers
+    Uses SLM to determine complaint type.
+    """
+    if tool_name != "send_certificate":
+        return None
+    amount = tool_args.get("amount", 0)
+    if not amount:
+        return None
+
+    from tau2.verifier.slm_helper import slm_extract
+
+    # Get the reservation ID
+    res_id_answer = slm_extract(
+        "What reservation ID is the user complaining about? "
+        "Answer with ONLY the reservation ID, or 'unknown'.",
+        conversation,
+    )
+    res_id = res_id_answer.strip().strip("'\"")
+
+    user_id = tool_args.get("user_id", "")
+    # Try to find the reservation
+    db_res = _get_reservation(db, res_id)
+    if not db_res:
+        # Try all user's reservations
+        user = _get_user(db, user_id)
+        if user:
+            for rid in user.reservations:
+                db_res = _get_reservation(db, rid)
+                if db_res:
+                    break
+    if not db_res:
+        return None  # can't verify without reservation
+
+    n_passengers = len(db_res.passengers)
+
+    # Determine complaint type
+    complaint_type = slm_extract(
+        "Is the user complaining about a cancelled flight or a delayed flight? "
+        "Answer ONLY 'cancelled' or 'delayed'.",
+        conversation,
+    )
+    ctype = complaint_type.lower().strip()
+
+    if ctype == "cancelled":
+        expected = 100 * n_passengers
+    elif ctype == "delayed":
+        expected = 50 * n_passengers
+    else:
+        return None  # can't determine, skip
+
+    if amount != expected:
+        return (
+            f"Policy violation: for a {ctype} flight with {n_passengers} passengers, "
+            f"the certificate amount should be ${expected}, not ${amount}."
+        )
+    return None
+
+
+def rule_certificate_no_proactive(tool_name, tool_args, conversation, db):
+    """Do not proactively offer compensation unless user explicitly asks."""
+    if tool_name != "send_certificate":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "Did the user explicitly ask for compensation, a voucher, a certificate, "
+        "a refund, or some form of monetary gesture from the airline? "
+        "The user must have clearly requested it — the agent offering it on their own does NOT count. "
+        "Look at the USER messages only, not the agent's messages. "
+        "Answer ONLY 'yes' or 'no'.",
+        conversation,
+    )
+    if answer.lower().strip() == "no":
+        return (
+            "Policy violation: do not proactively offer compensation. "
+            "The user has not explicitly asked for compensation."
+        )
+    return None
+
+
+# ============================================================================
+#  TRANSFER TO HUMAN AGENTS
+# ============================================================================
+
+def rule_transfer_only_when_needed(tool_name, tool_args, conversation, db):
+    """
+    Only transfer if user explicitly asks OR the request truly can't be handled.
+    Be aggressive about blocking unnecessary transfers — the agent should try
+    booking, modifying, or cancelling before giving up.
+    """
+    if tool_name != "transfer_to_human_agents":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "Did the user explicitly ask to speak to a human agent or supervisor? "
+        "Answer ONLY 'yes' or 'no'. "
+        "Note: the user asking for help with booking, cancelling, modifying, or upgrading "
+        "does NOT count — those can be handled by the automated system.",
+        conversation,
+    )
+    if answer.lower().strip() == "yes":
+        return None  # user explicitly asked for human
+
+    # Check if the request truly can't be handled
+    answer2 = slm_extract(
+        "Is the user's core request one of these: book a flight, cancel a reservation, "
+        "modify flights/cabin/baggage/passengers, or get a certificate/compensation? "
+        "These CAN be handled by the automated system. "
+        "Answer 'yes' if the request is one of these (i.e. it CAN be handled), "
+        "or 'no' if it truly requires a human agent (e.g. changing number of passengers, "
+        "refunding a partially flown trip, something the tools cannot do). "
+        "Answer ONLY 'yes' or 'no'.",
+        conversation,
+    )
+    if answer2.lower().strip() == "yes":
+        return (
+            "Policy violation: do not transfer to a human agent. The user's request "
+            "(booking, cancelling, modifying, or compensation) can be handled by you. "
+            "Please try using the appropriate tool instead of transferring."
+        )
+    return None
+
+
+# ============================================================================
+#  ARGUMENT VALIDATION — SLM-based checks on every write tool call
+# ============================================================================
+
+def _slm_extract_json_facts(question: str, conversation: list[dict]) -> dict:
+    """Ask SLM a question and parse the JSON response. Returns {} on failure."""
+    from tau2.verifier.slm_helper import slm_extract
+    import json as _json
+    raw = slm_extract(question + " Reply in valid JSON only, no explanation.", conversation, max_tokens=512)
+    # Strip markdown code fences if present
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = [l for l in lines if not l.strip().startswith("```")]
+        text = "\n".join(lines).strip()
+    try:
+        return _json.loads(text)
+    except (_json.JSONDecodeError, TypeError):
+        return {}
+
+
+def rule_arg_book_reservation(tool_name, tool_args, conversation, db):
+    """Validate book_reservation arguments match what user requested."""
+    if tool_name != "book_reservation":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+
+    # Extract key booking facts from conversation in one call
+    facts = _slm_extract_json_facts(
+        "Based on the conversation, what did the user request for their booking? "
+        "Extract these fields as JSON: "
+        '{"origin": "3-letter airport code", "destination": "3-letter airport code", '
+        '"cabin": "basic_economy or economy or business", '
+        '"num_passengers": number, '
+        '"flight_type": "one_way or round_trip"}. '
+        "Use ONLY information explicitly stated by the user or found in tool results.",
+        conversation,
+    )
+    if not facts:
+        return None
+
+    violations = []
+
+    # Check origin
+    if facts.get("origin") and tool_args.get("origin"):
+        if facts["origin"].upper() != tool_args["origin"].upper():
+            violations.append(
+                f"origin should be {facts['origin'].upper()} but got {tool_args['origin']}"
+            )
+
+    # Check destination
+    if facts.get("destination") and tool_args.get("destination"):
+        if facts["destination"].upper() != tool_args["destination"].upper():
+            violations.append(
+                f"destination should be {facts['destination'].upper()} but got {tool_args['destination']}"
+            )
+
+    # Check cabin
+    if facts.get("cabin") and tool_args.get("cabin"):
+        if facts["cabin"].lower().replace(" ", "_") != tool_args["cabin"].lower().replace(" ", "_"):
+            violations.append(
+                f"cabin should be {facts['cabin']} but got {tool_args['cabin']}"
+            )
+
+    # Check number of passengers
+    if facts.get("num_passengers") and tool_args.get("passengers"):
+        expected_pax = int(facts["num_passengers"])
+        actual_pax = len(tool_args["passengers"])
+        if expected_pax != actual_pax:
+            violations.append(
+                f"should have {expected_pax} passengers but got {actual_pax}"
+            )
+
+    # Check flight_type
+    if facts.get("flight_type") and tool_args.get("flight_type"):
+        ft_expected = facts["flight_type"].lower().replace(" ", "_")
+        ft_actual = tool_args["flight_type"].lower().replace(" ", "_")
+        if ft_expected != ft_actual:
+            violations.append(
+                f"flight type should be {ft_expected} but got {ft_actual}"
+            )
+
+    if violations:
+        return (
+            "Argument mismatch: the booking arguments don't match what the user requested. "
+            + "; ".join(violations) + ". "
+            "Please fix the arguments and try again."
+        )
+    return None
+
+
+def rule_arg_book_payment_total(tool_name, tool_args, conversation, db):
+    """Validate that payment amounts in book_reservation add up correctly."""
+    if tool_name != "book_reservation":
+        return None
+
+    user_id = tool_args.get("user_id", "")
+    user = _get_user(db, user_id)
+    if not user:
+        return None
+
+    payments = tool_args.get("payment_methods", [])
+    total_paid = 0
+    for p in payments:
+        amount = p.get("amount", 0) if isinstance(p, dict) else getattr(p, "amount", 0)
+        try:
+            total_paid += int(amount)
+        except (ValueError, TypeError):
+            pass
+
+    # We can't know the exact price without computing it, but we can check
+    # that the user's payment methods actually exist and have sufficient balance
+    for p in payments:
+        pid = p.get("payment_id", "") if isinstance(p, dict) else getattr(p, "payment_id", "")
+        amount = p.get("amount", 0) if isinstance(p, dict) else getattr(p, "amount", 0)
+        try:
+            amount = int(amount)
+        except (ValueError, TypeError):
+            continue
+        pm = user.payment_methods.get(pid)
+        if pm is None:
+            continue  # already caught by rule_book_payment_in_profile
+        source = getattr(pm, "source", "")
+        balance = getattr(pm, "amount", None)
+        if balance is not None and source in ("gift_card", "certificate"):
+            try:
+                if amount > int(balance):
+                    return (
+                        f"Argument mismatch: payment '{pid}' ({source}) has balance "
+                        f"${balance} but you're trying to charge ${amount}. "
+                        f"Please adjust the payment amount."
+                    )
+            except (ValueError, TypeError):
+                pass
+
+    return None
+
+
+def rule_arg_update_flights(tool_name, tool_args, conversation, db):
+    """Validate update_reservation_flights arguments match conversation."""
+    if tool_name != "update_reservation_flights":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    # Check cabin matches what user requested
+    facts = _slm_extract_json_facts(
+        "Based on the conversation, what cabin class did the user request for their "
+        "flight modification? Also, what reservation ID are they modifying? "
+        'Extract as JSON: {"cabin": "basic_economy or economy or business or unchanged", '
+        '"reservation_id": "the reservation ID"}.',
+        conversation,
+    )
+    if not facts:
+        return None
+
+    violations = []
+
+    # Check reservation_id
+    if facts.get("reservation_id") and reservation_id:
+        expected_rid = str(facts["reservation_id"]).strip()
+        if expected_rid.upper() != reservation_id.upper():
+            violations.append(
+                f"reservation should be {expected_rid} but modifying {reservation_id}"
+            )
+
+    # Check cabin
+    new_cabin = tool_args.get("cabin", "")
+    if facts.get("cabin") and new_cabin:
+        fc = facts["cabin"].lower().replace(" ", "_")
+        if fc not in ("unchanged",) and fc != new_cabin.lower().replace(" ", "_"):
+            violations.append(
+                f"cabin should be {facts['cabin']} but got {new_cabin}"
+            )
+
+    if violations:
+        return (
+            "Argument mismatch: flight modification arguments don't match the user's request. "
+            + "; ".join(violations) + ". "
+            "Please fix the arguments and try again."
+        )
+    return None
+
+
+def rule_arg_cancel_reservation(tool_name, tool_args, conversation, db):
+    """Validate cancel_reservation is for the right reservation."""
+    if tool_name != "cancel_reservation":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+
+    reservation_id = tool_args.get("reservation_id", "")
+
+    answer = slm_extract(
+        "What reservation ID(s) does the user want to cancel? "
+        "List ALL reservation IDs mentioned for cancellation, comma-separated. "
+        "If the user wants to cancel ALL reservations, say 'all'. "
+        "Answer with ONLY the reservation ID(s).",
+        conversation,
+    )
+    raw = answer.upper().strip()
+
+    if raw == "ALL":
+        return None  # user wants to cancel everything, any cancel is fine
+
+    # Parse the mentioned reservation IDs
+    mentioned_ids = {rid.strip().strip("'\"") for rid in raw.split(",") if rid.strip()}
+
+    if mentioned_ids and reservation_id.upper() not in mentioned_ids:
+        return (
+            f"Argument mismatch: trying to cancel reservation {reservation_id} "
+            f"but the user asked to cancel: {', '.join(mentioned_ids)}. "
+            f"Please cancel the correct reservation."
+        )
+
+    return None
+
+
+def rule_arg_update_baggages(tool_name, tool_args, conversation, db):
+    """Validate update_reservation_baggages arguments match conversation."""
+    if tool_name != "update_reservation_baggages":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+
+    reservation_id = tool_args.get("reservation_id", "")
+    reservation = _get_reservation(db, reservation_id)
+    if not reservation:
+        return None
+
+    # Verify the reservation ID matches what user discussed
+    facts = _slm_extract_json_facts(
+        "Based on the conversation, what reservation is the user modifying baggage for, "
+        "and how many total checked bags do they want? "
+        '{"reservation_id": "ID", "total_bags": number_or_null}',
+        conversation,
+    )
+    if not facts:
+        return None
+
+    violations = []
+
+    if facts.get("reservation_id"):
+        expected_rid = str(facts["reservation_id"]).strip()
+        if expected_rid.upper() != reservation_id.upper():
+            violations.append(
+                f"reservation should be {expected_rid} but modifying {reservation_id}"
+            )
+
+    if facts.get("total_bags") is not None:
+        try:
+            expected_bags = int(facts["total_bags"])
+            actual_bags = int(tool_args.get("total_baggages", 0))
+            if expected_bags != actual_bags:
+                violations.append(
+                    f"user wants {expected_bags} total bags but got {actual_bags}"
+                )
+        except (ValueError, TypeError):
+            pass
+
+    if violations:
+        return (
+            "Argument mismatch: baggage update arguments don't match user's request. "
+            + "; ".join(violations) + ". "
+            "Please fix the arguments and try again."
+        )
+    return None
+
+
+def rule_arg_send_certificate(tool_name, tool_args, conversation, db):
+    """Validate send_certificate user_id matches conversation."""
+    if tool_name != "send_certificate":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+
+    user_id = tool_args.get("user_id", "")
+    # Check if this is the right user
+    answer = slm_extract(
+        "What is the user ID of the customer in this conversation? "
+        "Answer with ONLY the user ID (e.g. 'john_doe_1234').",
+        conversation,
+    )
+    mentioned_uid = answer.strip().strip("'\"").lower()
+
+    if mentioned_uid and user_id.lower() != mentioned_uid:
+        return (
+            f"Argument mismatch: sending certificate to {user_id} "
+            f"but the customer is {mentioned_uid}. "
+            f"Please use the correct user_id."
+        )
+    return None
+
+
+# ============================================================================
+#  REGISTRY — all rules in execution order
+# ============================================================================
+
+ALL_RULES = [
+    # Booking
+    rule_book_max_passengers,
+    rule_book_payment_limits,
+    rule_book_payment_in_profile,
+    rule_book_baggage_count,
+    rule_arg_book_reservation,
+    rule_arg_book_payment_total,  # cheap DB-only check, no SLM
+    # Modify flights
+    rule_modify_basic_economy_no_flight_change,
+    rule_modify_no_change_origin_dest_type,
+    rule_modify_cabin_no_flown_flights,
+    rule_modify_payment_method,
+    rule_arg_update_flights,
+    # Modify baggage
+    rule_baggage_no_removal,
+    rule_baggage_no_insurance_after_booking,
+    rule_arg_update_baggages,
+    # Modify passengers
+    rule_passengers_no_count_change,
+    # Cancel
+    rule_cancel_flown_flights,
+    rule_cancel_eligibility,
+    rule_arg_cancel_reservation,
+    # Certificate / compensation
+    rule_certificate_eligibility,
+    rule_certificate_amount,
+    rule_certificate_no_proactive,
+    rule_arg_send_certificate,
+    # Transfer
+    rule_transfer_only_when_needed,
+]
+
+# Which tools trigger SLM calls (expensive) vs pure DB checks (cheap)
+CHEAP_RULES = [
+    rule_book_max_passengers,
+    rule_book_payment_limits,
+    rule_book_payment_in_profile,
+    rule_book_baggage_count,
+    rule_arg_book_payment_total,
+    rule_modify_basic_economy_no_flight_change,
+    rule_modify_cabin_no_flown_flights,
+    rule_modify_payment_method,
+    rule_baggage_no_removal,
+    rule_passengers_no_count_change,
+    rule_cancel_flown_flights,
+]
+
+SLM_RULES = [r for r in ALL_RULES if r not in CHEAP_RULES]
+
+
+def check_all(
+    tool_name: str,
+    tool_args: dict,
+    conversation: list[dict],
+    db,
+    cheap_only: bool = False,
+) -> str | None:
+    """
+    Run all applicable policy rules against a tool call.
+
+    Parameters
+    ----------
+    tool_name : str
+        Name of the tool being called.
+    tool_args : dict
+        Arguments to the tool.
+    conversation : list[dict]
+        Recent message history ({role, content} dicts).
+    db : FlightDB
+        Current database state.
+    cheap_only : bool
+        If True, skip SLM-based rules (faster but less thorough).
+
+    Returns
+    -------
+    str or None
+        First violation message found, or None if all rules pass.
+    """
+    rules = CHEAP_RULES if cheap_only else ALL_RULES
+
+    for rule_fn in rules:
+        try:
+            result = rule_fn(tool_name, tool_args, conversation, db)
+            if result is not None:
+                logger.info("Rule %s violated: %s", rule_fn.__name__, result)
+                return result
+        except Exception as e:
+            logger.warning("Rule %s raised exception: %s", rule_fn.__name__, e)
+            continue
+
+    return None

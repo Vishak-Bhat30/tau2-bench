@@ -363,6 +363,13 @@ def build_text_orchestrator(
 
     environment = build_environment(domain, solo_mode=solo_mode, env_kwargs=env_kwargs)
 
+    # Build policy verifier if enabled
+    tool_call_verifier = None
+    if getattr(config, "enable_tool_call_verifier", False) and domain in ("airline", "retail", "telecom"):
+        from tau2.verifier.verifier import PolicyVerifier
+        tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
+        logger.info("Policy verifier enabled for domain=%s", domain)
+
     agent = build_agent(
         config.effective_agent,
         environment,
@@ -395,6 +402,7 @@ def build_text_orchestrator(
         simulation_id=simulation_id,
         validate_communication=config.enforce_communication_protocol,
         timeout=config.timeout,
+        tool_call_verifier=tool_call_verifier,
     )
 
     logger.debug(

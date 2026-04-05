@@ -565,6 +565,13 @@ class TextRunConfig(BaseRunConfig):
             default=None,
         ),
     ]
+    enable_tool_call_verifier: Annotated[
+        bool,
+        Field(
+            description="Whether to enable policy-based tool call verification",
+            default=False,
+        ),
+    ]
 
     # ---- Properties ----
 

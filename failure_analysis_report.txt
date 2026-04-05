@@ -1,0 +1,503 @@
+
+================================================================================
+ AIRLINE — 50 tasks
+================================================================================
+ Score: 27/50 = 54.0%  (avg reward = 0.540)
+
+ Category                                      Count     Pct
+ ---------------------------------------------------------
+ PASS_NO_VERIFIER                                 24   48.0%
+ FAIL_DB_NO_WRITES_MADE                           12   24.0%
+ FAIL_DB_WRONG_ACTION_NO_VERIFIER                  4    8.0%
+ PASS_WITH_STEERING                                3    6.0%
+ FAIL_DB_PLUS_COMMUNICATE                          3    6.0%
+ FAIL_VERIFIER_STEERED_BUT_DB_WRONG                2    4.0%
+ FAIL_VERIFIER_IGNORED_DB_WRONG                    2    4.0%
+
+ DETAILED TASK IDs PER CATEGORY:
+
+  [PASS_NO_VERIFIER] (24 tasks)
+   1                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   0                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   3                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   4                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   6                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   5                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+     writes: transfer_to_human_agentsx1
+   9                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   10                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   13                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+     writes: transfer_to_human_agentsx1
+   20                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+     writes: book_reservationx1
+   26                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+     writes: transfer_to_human_agentsx1
+   27                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   25                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+     writes: book_reservationx2
+   28                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+   31                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=0
+     writes: transfer_to_human_agentsx1
+   ... and 9 more
+
+  [FAIL_DB_NO_WRITES_MADE] (12 tasks)
+   16                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   15                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   17                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   19                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   24                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   29                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   30                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   33                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   37                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   40                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   39                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+   42                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+
+  [FAIL_DB_WRONG_ACTION_NO_VERIFIER] (4 tasks)
+   8                                                       r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+     writes: book_reservationx1
+   21                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+     writes: update_reservation_flightsx1, update_reservation_baggagesx1
+   32                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+     writes: transfer_to_human_agentsx1
+   44                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=0
+     writes: transfer_to_human_agentsx1
+
+  [PASS_WITH_STEERING] (3 tasks)
+   2                                                       r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=1
+     writes: send_certificatex1
+   12                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=1, steered=0/1
+     writes: update_reservation_flightsx1, update_reservation_baggagesx1
+   38                                                      r=1.00 bd={'DB': 1.0, 'COMMUNICATE': 1.0} v=1
+     writes: cancel_reservationx1
+
+  [FAIL_DB_PLUS_COMMUNICATE] (3 tasks)
+   7                                                       r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 0.0} v=0
+     writes: update_reservation_flightsx2
+   11                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 0.0} v=0
+   23                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 0.0} v=0
+     writes: book_reservationx2, cancel_reservationx1
+
+  [FAIL_VERIFIER_STEERED_BUT_DB_WRONG] (2 tasks)
+   14                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=1, steered=1/1
+     writes: book_reservationx2, update_reservation_flightsx1, cancel_reservationx1
+   35                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=2, steered=2/2
+     writes: book_reservationx2, update_reservation_flightsx1, cancel_reservationx1
+
+  [FAIL_VERIFIER_IGNORED_DB_WRONG] (2 tasks)
+   22                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 1.0} v=1, steered=0/1
+     writes: update_reservation_baggagesx2
+   18                                                      r=0.00 bd={'DB': 0.0, 'COMMUNICATE': 0.0} v=1, steered=0/1
+     writes: update_reservation_flightsx6
+
+ STEERING EXAMPLES (3):
+  ✗ FAILED (r=0.00) Task 14
+    Blocked: update_reservation_flights → Changed to: cancel_reservation
+    Verifier: [VERIFIER] FORBIDDEN: update_reservation_flights should not be called. Flight modification is not allowed for this scena
+  ✗ FAILED (r=0.00) Task 35
+    Blocked: update_reservation_flights → Changed to: cancel_reservation
+    Verifier: [VERIFIER] FORBIDDEN: update_reservation_flights should not be called. Flight modification is not allowed for this scena
+  ✗ FAILED (r=0.00) Task 35
+    Blocked: cancel_reservation → Changed to: book_reservation
+    Verifier: [VERIFIER] FORBIDDEN: cancel_reservation should not be called. Cancellation is not allowed for this scenario. Task conte
+
+================================================================================
+ RETAIL — 114 tasks
+================================================================================
+ Score: 34/114 = 29.8%  (avg reward = 0.298)
+
+ Category                                      Count     Pct
+ ---------------------------------------------------------
+ FAIL_DB_NO_WRITES_MADE                           46   40.4%
+ PASS_NO_VERIFIER                                 21   18.4%
+ FAIL_DB_PLUS_NL_ASSERTION                        15   13.2%
+ PASS_WITH_STEERING                               13   11.4%
+ FAIL_DB_WRONG_ACTION_NO_VERIFIER                  9    7.9%
+ FAIL_VERIFIER_IGNORED_DB_WRONG                    9    7.9%
+ FAIL_VERIFIER_STEERED_BUT_DB_WRONG                1    0.9%
+
+ DETAILED TASK IDs PER CATEGORY:
+
+  [FAIL_DB_NO_WRITES_MADE] (46 tasks)
+   0                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   1                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   3                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   6                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   7                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   8                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   11                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   9                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   13                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   15                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   17                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   22                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   26                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   27                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+   34                                                      r=0.00 bd={'DB': 0.0} v=0
+   ... and 31 more
+
+  [PASS_NO_VERIFIER] (21 tasks)
+   12                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   20                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_itemsx1
+   24                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   28                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: return_delivered_order_itemsx3
+   47                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: return_delivered_order_itemsx1
+   50                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   48                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: return_delivered_order_itemsx1
+   52                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: exchange_delivered_order_itemsx1
+   61                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_itemsx1
+   62                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   65                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   67                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   68                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+   70                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: exchange_delivered_order_itemsx1
+   71                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_addressx1, modify_pending_order_itemsx1
+   ... and 6 more
+
+  [FAIL_DB_PLUS_NL_ASSERTION] (15 tasks)
+   2                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   4                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   16                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   19                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   29                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   38                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   39                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   43                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   45                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   54                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   76                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   104                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   108                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   110                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+   111                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=0
+
+  [PASS_WITH_STEERING] (13 tasks)
+   10                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1
+     writes: return_delivered_order_itemsx1
+   18                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: exchange_delivered_order_itemsx2
+   25                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=2, steered=1/2
+     writes: return_delivered_order_itemsx2
+   31                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=2, steered=0/2
+     writes: return_delivered_order_itemsx3, cancel_pending_orderx1
+   37                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=2, steered=0/2
+     writes: modify_pending_order_itemsx3
+   46                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: return_delivered_order_itemsx2
+   57                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=1/1
+     writes: cancel_pending_orderx1
+   58                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: exchange_delivered_order_itemsx2
+   63                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: modify_pending_order_itemsx2
+   73                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: return_delivered_order_itemsx2
+   79                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=3, steered=0/3
+     writes: modify_pending_order_itemsx5
+   93                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: exchange_delivered_order_itemsx2
+   99                                                      r=1.00 bd={'DB': 1.0, 'NL_ASSERTION': 1.0} v=1, steered=1/1
+     writes: exchange_delivered_order_itemsx2, cancel_pending_orderx1
+
+  [FAIL_DB_WRONG_ACTION_NO_VERIFIER] (9 tasks)
+   14                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: return_delivered_order_itemsx1
+   30                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: return_delivered_order_itemsx1
+   74                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: cancel_pending_orderx1
+   91                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: return_delivered_order_itemsx1
+   97                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_itemsx1, modify_pending_order_addressx1
+   102                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_addressx1
+   109                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_addressx1
+   113                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: cancel_pending_orderx1
+   112                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=0
+     writes: modify_pending_order_addressx1, modify_pending_order_itemsx1
+
+  [FAIL_VERIFIER_IGNORED_DB_WRONG] (9 tasks)
+   21                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=1
+     writes: exchange_delivered_order_itemsx1
+   23                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: exchange_delivered_order_itemsx2
+   33                                                      r=0.00 bd={'DB': 0.0} v=1
+     writes: cancel_pending_orderx1
+   32                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=3, steered=0/3
+     writes: return_delivered_order_itemsx5, cancel_pending_orderx2
+   59                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=1, steered=0/1
+     writes: cancel_pending_orderx2
+   72                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: modify_pending_order_itemsx2
+   98                                                      r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=3, steered=0/3
+     writes: exchange_delivered_order_itemsx5, cancel_pending_orderx1
+   103                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 0.0} v=1, steered=0/1
+     writes: modify_pending_order_itemsx2, return_delivered_order_itemsx1, modify_pending_order_addressx1
+   107                                                     r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=1, steered=0/1
+     writes: exchange_delivered_order_itemsx2
+
+  [FAIL_VERIFIER_STEERED_BUT_DB_WRONG] (1 tasks)
+   5                                                       r=0.00 bd={'DB': 0.0, 'NL_ASSERTION': 1.0} v=1, steered=1/1
+     writes: exchange_delivered_order_itemsx1
+
+ STEERING EXAMPLES (4):
+  ✓ SUCCESS Task 25
+    Blocked: return_delivered_order_items → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: return_delivered_order_items should not be called. return_delivered_order_items is not allowed for
+  ✓ SUCCESS Task 57
+    Blocked: cancel_pending_order → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: cancel_pending_order should not be called. cancel_pending_order is not allowed for this scenario. 
+  ✓ SUCCESS Task 99
+    Blocked: cancel_pending_order → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: cancel_pending_order should not be called. cancel_pending_order is not allowed for this scenario. 
+  ✗ FAILED (r=0.00) Task 5
+    Blocked: exchange_delivered_order_items → Changed to: get_product_details
+    Verifier: [VERIFIER] FORBIDDEN: exchange_delivered_order_items should not be called. exchange_delivered_order_items is not allowed
+
+================================================================================
+ TELECOM — 114 tasks
+================================================================================
+ Score: 21/114 = 18.4%  (avg reward = 0.184)
+
+ Category                                      Count     Pct
+ ---------------------------------------------------------
+ FAIL_VERIFIER_ACTIVE_COMM_OR_NL                  56   49.1%
+ FAIL_ENV_ASSERTION_ONLY                          30   26.3%
+ PASS_WITH_STEERING                               13   11.4%
+ PASS_NO_VERIFIER                                  8    7.0%
+ FAIL_ACTION                                       3    2.6%
+ FAIL_NO_BREAKDOWN                                 3    2.6%
+ FAIL_INFRASTRUCTURE                               1    0.9%
+
+ DETAILED TASK IDs PER CATEGORY:
+
+  [FAIL_VERIFIER_ACTIVE_COMM_OR_NL] (56 tasks)
+   [mobile_data_issue]airplane_mode_on|user_abroad_roaming r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=1/1
+     writes: toggle_airplane_modex1
+   [mobile_data_issue]data_saver_mode_on|user_abroad_roami r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=1/1
+   [mobile_data_issue]data_usage_exceeded|user_abroad_roam r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=1/1
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=2, steered=1/1
+   [mobile_data_issue]bad_vpn|data_saver_mode_on|user_abro r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+   [mobile_data_issue]bad_network_preference|bad_vpn|user_ r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+   [mobile_data_issue]airplane_mode_on|data_saver_mode_on| r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+     writes: toggle_airplane_modex2
+   [mobile_data_issue]bad_vpn|data_mode_off|data_usage_exc r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+   [mobile_data_issue]bad_network_preference|bad_vpn|data_ r=0.00 bd={'ENV_ASSERTION': 0.0} v=1
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+   [mobile_data_issue]airplane_mode_on|data_mode_off|data_ r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=1/1
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+     writes: toggle_airplane_modex1
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=1, steered=0/1
+     writes: toggle_airplane_modex3
+   ... and 41 more
+
+  [FAIL_ENV_ASSERTION_ONLY] (30 tasks)
+   [mobile_data_issue]airplane_mode_on|data_mode_off[PERSO r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [mobile_data_issue]bad_network_preference|user_abroad_r r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [mobile_data_issue]data_mode_off|data_usage_exceeded[PE r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [mobile_data_issue]data_saver_mode_on|data_usage_exceed r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [mobile_data_issue]bad_network_preference|data_saver_mo r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]airplane_mode_on|unseat_sim_card[PERSONA r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]airplane_mode_on|break_apn_settings[PERS r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]overdue_bill_suspension|unseat_sim_card[ r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]airplane_mode_on|overdue_bill_suspension r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]airplane_mode_on|overdue_bill_suspension r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+     writes: toggle_airplane_modex2
+   [service_issue]airplane_mode_on|break_apn_settings|over r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]break_apn_settings|overdue_bill_suspensi r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   [service_issue]airplane_mode_on|break_apn_settings|over r=0.00 bd={'ENV_ASSERTION': 0.0} v=0
+   ... and 15 more
+
+  [PASS_WITH_STEERING] (13 tasks)
+   [mobile_data_issue]bad_network_preference|bad_vpn|user_ r=1.00 bd={'ENV_ASSERTION': 1.0} v=1, steered=1/1
+   [mobile_data_issue]bad_network_preference|bad_vpn|user_ r=1.00 bd={'ENV_ASSERTION': 1.0} v=1, steered=0/1
+   [mobile_data_issue]bad_network_preference|bad_vpn|data_ r=1.00 bd={'ENV_ASSERTION': 1.0} v=1, steered=0/1
+   [service_issue]break_apn_settings|lock_sim_card_pin[PER r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1
+   [service_issue]lock_sim_card_pin|overdue_bill_suspensio r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1, steered=1/1
+   [service_issue]break_apn_settings|lock_sim_card_pin|ove r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1, steered=1/1
+   [service_issue]break_apn_settings|contract_end_suspensi r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1, steered=1/1
+   [service_issue]airplane_mode_on|contract_end_suspension r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1
+   [service_issue]airplane_mode_on|break_apn_settings|lock r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1, steered=1/1
+   [service_issue]break_apn_settings|lock_sim_card_pin|ove r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1, steered=1/1
+   [service_issue]airplane_mode_on|break_apn_settings|cont r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1
+   [service_issue]airplane_mode_on|break_apn_settings|lock r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=1, steered=1/1
+   [mms_issue]airplane_mode_on|bad_network_preference|brea r=1.00 bd={'ENV_ASSERTION': 1.0} v=1, steered=0/1
+
+  [PASS_NO_VERIFIER] (8 tasks)
+   [mobile_data_issue]airplane_mode_on|bad_network_prefere r=1.00 bd={'ENV_ASSERTION': 1.0} v=0
+   [service_issue]airplane_mode_on|lock_sim_card_pin[PERSO r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=0
+     writes: toggle_airplane_modex1
+   [service_issue]contract_end_suspension|unseat_sim_card[ r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=0
+   [service_issue]airplane_mode_on|lock_sim_card_pin|unsea r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=0
+   [service_issue]airplane_mode_on|break_apn_settings|unse r=1.00 bd={'ENV_ASSERTION': 1.0} v=0
+   [service_issue]airplane_mode_on|lock_sim_card_pin|overd r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=0
+   [service_issue]airplane_mode_on|lock_sim_card_pin|overd r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=0
+   [service_issue]airplane_mode_on|break_apn_settings|cont r=1.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 1.0} v=0
+
+  [FAIL_ACTION] (3 tasks)
+   [service_issue]contract_end_suspension|lock_sim_card_pi r=0.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 0.0} v=0
+   [service_issue]airplane_mode_on|break_apn_settings|lock r=0.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 0.0} v=0
+     writes: toggle_airplane_modex1
+   [service_issue]airplane_mode_on|break_apn_settings|cont r=0.00 bd={'ENV_ASSERTION': 1.0, 'ACTION': 0.0} v=0
+
+  [FAIL_NO_BREAKDOWN] (3 tasks)
+   [mobile_data_issue]data_mode_off|data_usage_exceeded|us r=0.00 bd={} v=0
+   [service_issue]break_apn_settings|contract_end_suspensi r=0.00 bd={} v=0
+   [service_issue]airplane_mode_on|break_apn_settings|lock r=0.00 bd={} v=0
+
+  [FAIL_INFRASTRUCTURE] (1 tasks)
+   [mobile_data_issue]bad_network_preference|bad_vpn|data_ r=0.00 bd={} v=0
+
+ STEERING EXAMPLES (28):
+  ✓ SUCCESS Task [mobile_data_issue]bad_network_preference|bad_vpn|
+    Blocked: enable_roaming → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✓ SUCCESS Task [service_issue]lock_sim_card_pin|overdue_bill_susp
+    Blocked: send_payment_request → Changed to: check_sim_status
+    Verifier: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. 
+  ✓ SUCCESS Task [service_issue]break_apn_settings|lock_sim_card_pi
+    Blocked: send_payment_request → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. 
+  ✓ SUCCESS Task [service_issue]break_apn_settings|contract_end_sus
+    Blocked: send_payment_request → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. 
+  ✓ SUCCESS Task [service_issue]airplane_mode_on|break_apn_settings
+    Blocked: send_payment_request → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. 
+  ✓ SUCCESS Task [service_issue]break_apn_settings|lock_sim_card_pi
+    Blocked: send_payment_request → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. 
+  ✓ SUCCESS Task [service_issue]airplane_mode_on|break_apn_settings
+    Blocked: send_payment_request → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. 
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|user_abroad_ro
+    Blocked: enable_roaming → Changed to: check_status_bar
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]data_saver_mode_on|user_abroad_
+    Blocked: enable_roaming → Changed to: check_data_restriction_status
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]data_usage_exceeded|user_abroad
+    Blocked: enable_roaming → Changed to: get_data_usage
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|bad_network_pr
+    Blocked: enable_roaming → Changed to: get_data_usage
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|data_mode_off|
+    Blocked: enable_roaming → Changed to: check_network_status
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|bad_network_pr
+    Blocked: enable_roaming → Changed to: toggle_roaming
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|bad_network_pr
+    Blocked: enable_roaming → Changed to: check_status_bar
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|bad_network_pr
+    Blocked: enable_roaming → Changed to: get_data_usage
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|bad_network_pr
+    Blocked: enable_roaming → Changed to: run_speed_test
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mobile_data_issue]airplane_mode_on|bad_network_pr
+    Blocked: enable_roaming → Changed to: check_network_mode_preference
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mms_issue]break_apn_mms_setting|user_abroad_roami
+    Blocked: enable_roaming → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mms_issue]airplane_mode_on|bad_wifi_calling|user_
+    Blocked: enable_roaming → Changed to: check_wifi_calling_status
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+  ✗ FAILED (r=0.00) Task [mms_issue]airplane_mode_on|bad_wifi_calling|user_
+    Blocked: enable_roaming → Changed to: transfer_to_human_agents
+    Verifier: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context
+
+================================================================================
+ GRAND SUMMARY
+================================================================================
+
+ Total tasks across all domains: 278
+
+ Category                                      Count     Pct
+ ---------------------------------------------------------
+ FAIL_DB_NO_WRITES_MADE                           58   20.9%
+ FAIL_VERIFIER_ACTIVE_COMM_OR_NL                  56   20.1%
+ PASS_NO_VERIFIER                                 53   19.1%
+ FAIL_ENV_ASSERTION_ONLY                          30   10.8%
+ PASS_WITH_STEERING                               29   10.4%
+ FAIL_DB_PLUS_NL_ASSERTION                        15    5.4%
+ FAIL_DB_WRONG_ACTION_NO_VERIFIER                 13    4.7%
+ FAIL_VERIFIER_IGNORED_DB_WRONG                   11    4.0%
+ FAIL_DB_PLUS_COMMUNICATE                          3    1.1%
+ FAIL_VERIFIER_STEERED_BUT_DB_WRONG                3    1.1%
+ FAIL_ACTION                                       3    1.1%
+ FAIL_NO_BREAKDOWN                                 3    1.1%
+ FAIL_INFRASTRUCTURE                               1    0.4%
+
+ ★ SHOWCASE SUCCESSFUL STEERINGS: 10
+   [retail] Task 25
+     Blocked return_delivered_order_items → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: return_delivered_order_items should not be called. return_delivered_order_items is not allowed for this scenario. Task
+   [retail] Task 57
+     Blocked cancel_pending_order → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: cancel_pending_order should not be called. cancel_pending_order is not allowed for this scenario. Task context: Retail
+   [retail] Task 99
+     Blocked cancel_pending_order → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: cancel_pending_order should not be called. cancel_pending_order is not allowed for this scenario. Task context: Retail
+   [telecom] Task [mobile_data_issue]bad_network_preference|bad_vpn|
+     Blocked enable_roaming → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: enable_roaming should not be called. enable_roaming is not allowed for this scenario. Task context: mobile_data_issue:
+   [telecom] Task [service_issue]lock_sim_card_pin|overdue_bill_susp
+     Blocked send_payment_request → Agent used check_sim_status → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. Task context: servic
+   [telecom] Task [service_issue]break_apn_settings|lock_sim_card_pi
+     Blocked send_payment_request → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. Task context: servic
+   [telecom] Task [service_issue]break_apn_settings|contract_end_sus
+     Blocked send_payment_request → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. Task context: servic
+   [telecom] Task [service_issue]airplane_mode_on|break_apn_settings
+     Blocked send_payment_request → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. Task context: servic
+   [telecom] Task [service_issue]break_apn_settings|lock_sim_card_pi
+     Blocked send_payment_request → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. Task context: servic
+   [telecom] Task [service_issue]airplane_mode_on|break_apn_settings
+     Blocked send_payment_request → Agent used transfer_to_human_agents → PASSED!
+     Msg: [VERIFIER] FORBIDDEN: send_payment_request should not be called. send_payment_request is not allowed for this scenario. Task context: servic
+
+ ✗ STEERINGS THAT DID NOT LEAD TO SUCCESS: 25
+   [airline] Task 14 (r=0.00)
+     Blocked update_reservation_flights → Agent used cancel_reservation
+   [airline] Task 35 (r=0.00)
+     Blocked update_reservation_flights → Agent used cancel_reservation
+   [airline] Task 35 (r=0.00)
+     Blocked cancel_reservation → Agent used book_reservation
+   [retail] Task 5 (r=0.00)
+     Blocked exchange_delivered_order_items → Agent used get_product_details
+   [telecom] Task [mobile_data_issue]airplane_mode_on|user_abroad_ro (r=0.00)
+     Blocked enable_roaming → Agent used check_status_bar
+   [telecom] Task [mobile_data_issue]data_saver_mode_on|user_abroad_ (r=0.00)
+     Blocked enable_roaming → Agent used check_data_restriction_status
+   [telecom] Task [mobile_data_issue]data_usage_exceeded|user_abroad (r=0.00)
+     Blocked enable_roaming → Agent used get_data_usage
+   [telecom] Task [mobile_data_issue]airplane_mode_on|bad_network_pr (r=0.00)
+     Blocked enable_roaming → Agent used get_data_usage
+   [telecom] Task [mobile_data_issue]airplane_mode_on|data_mode_off| (r=0.00)
+     Blocked enable_roaming → Agent used check_network_status
+   [telecom] Task [mobile_data_issue]airplane_mode_on|bad_network_pr (r=0.00)
+     Blocked enable_roaming → Agent used toggle_roaming
