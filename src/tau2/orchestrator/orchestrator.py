@@ -353,9 +353,12 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
             if tool_result.error:
                 self.num_errors += 1
             else:
-                # Record successful write tool calls for completion tracking
-                if self.tool_call_verifier and hasattr(self.tool_call_verifier, 'record_tool_call'):
-                    self.tool_call_verifier.record_tool_call(tool_call.name)
+                # Record successful tool calls for completion tracking
+                if self.tool_call_verifier:
+                    if tool_call.requestor == "assistant" and hasattr(self.tool_call_verifier, 'record_tool_call'):
+                        self.tool_call_verifier.record_tool_call(tool_call.name, tool_call.arguments)
+                    elif tool_call.requestor == "user" and hasattr(self.tool_call_verifier, 'record_user_tool_call'):
+                        self.tool_call_verifier.record_user_tool_call(tool_call.name)
             tool_results.append(tool_result)
         return tool_results
 
@@ -949,6 +952,13 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                         and hasattr(self.tool_call_verifier, 'classify_task')
                         and not self.tool_call_verifier._expected_tools
                         and self.step_count <= 3):
+                    # Pass user instructions to verifier for reliable extraction
+                    if (hasattr(self.tool_call_verifier, 'set_user_instructions')
+                            and hasattr(self, 'task') and self.task
+                            and hasattr(self.task, 'user_scenario') and self.task.user_scenario):
+                        self.tool_call_verifier.set_user_instructions(
+                            str(self.task.user_scenario)
+                        )
                     conversation = self._build_conversation_for_verifier()
                     self.tool_call_verifier.classify_task(conversation)
         # USER/ENV -> AGENT

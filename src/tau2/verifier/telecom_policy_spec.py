@@ -228,11 +228,13 @@ def rule_arg_payment_bill(tool_name, tool_args, conversation, db):
     bill_id = tool_args.get("bill_id", "")
     answer = slm_extract(
         "What bill ID does the user want to pay? "
-        "Reply with ONLY the bill ID (e.g. B-1234).",
+        "Reply with ONLY the bill ID (e.g. B1234321). "
+        "Remove any hyphens or dashes from the ID.",
         conversation,
     )
-    mentioned = answer.strip().upper().replace(" ", "")
-    target = bill_id.upper()
+    # Normalize both: strip hyphens, dashes, spaces for comparison
+    mentioned = answer.strip().upper().replace(" ", "").replace("-", "")
+    target = bill_id.upper().replace("-", "")
     if target and mentioned and target not in mentioned and mentioned not in target:
         return (
             f"Argument mismatch: sending payment for bill {bill_id} "

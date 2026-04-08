@@ -222,3 +222,8 @@ data/simulations/.credentials/
 #   After deleting the branches, GitHub will eventually GC the orphaned objects.
 *_simulation.json
 
+
+run2.sh
+run3.sh
+run.sh
+
