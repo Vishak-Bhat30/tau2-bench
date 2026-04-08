@@ -47,17 +47,17 @@ def _get_product_for_item(db, item_id: str):
 # ============================================================================
 
 def rule_cancel_order_status(tool_name, tool_args, conversation, db):
-    """Can only cancel orders with status 'pending'."""
+    """Can only cancel orders with status starting with 'pending'."""
     if tool_name != "cancel_pending_order":
         return None
     order_id = tool_args.get("order_id", "")
     order = _get_order(db, order_id)
     if not order:
         return None
-    if order.status != "pending":
+    if not order.status.startswith("pending"):
         return (
             f"Policy violation: cannot cancel order {order_id} — "
-            f"status is '{order.status}', must be 'pending'."
+            f"status is '{order.status}', must be pending."
         )
     return None
 
@@ -281,14 +281,17 @@ def rule_modify_address_order_status(tool_name, tool_args, conversation, db):
 # ============================================================================
 
 def rule_return_order_status(tool_name, tool_args, conversation, db):
-    """Returns require 'delivered' status."""
+    """Returns require 'delivered' (or partially-processed) status."""
     if tool_name != "return_delivered_order_items":
         return None
     order_id = tool_args.get("order_id", "")
     order = _get_order(db, order_id)
     if not order:
         return None
-    if order.status != "delivered":
+    # Allow return on delivered orders and orders that already had partial
+    # returns or exchanges (status becomes 'return requested' / 'exchange requested')
+    allowed = {"delivered", "return requested", "exchange requested"}
+    if order.status not in allowed:
         return (
             f"Policy violation: cannot return items from order {order_id} — "
             f"status is '{order.status}', must be 'delivered'."
@@ -310,15 +313,24 @@ def rule_return_payment_method(tool_name, tool_args, conversation, db):
     if not user:
         return None
 
-    # Check if it's the original payment method
+    # Check if it's the original payment method (by ID)
     original_ids = {p.payment_method_id for p in order.payment_history}
     if payment_method_id in original_ids:
         return None
 
-    # Or a gift card
+    # Check if it's a gift card
     pm = user.payment_methods.get(payment_method_id)
     if pm and getattr(pm, "source", "") == "gift_card":
         return None
+
+    # Also allow if the payment source type matches one of the original payment types
+    # (handles cases where payment_method_id changed but source type is same, e.g. PayPal)
+    if pm:
+        pm_source = getattr(pm, "source", "")
+        for orig_pm_id in original_ids:
+            orig_pm = user.payment_methods.get(orig_pm_id)
+            if orig_pm and getattr(orig_pm, "source", "") == pm_source:
+                return None
 
     return (
         f"Policy violation: return refund must go to the original payment "
@@ -331,14 +343,17 @@ def rule_return_payment_method(tool_name, tool_args, conversation, db):
 # ============================================================================
 
 def rule_exchange_order_status(tool_name, tool_args, conversation, db):
-    """Exchanges require 'delivered' status."""
+    """Exchanges require 'delivered' (or partially-processed) status."""
     if tool_name != "exchange_delivered_order_items":
         return None
     order_id = tool_args.get("order_id", "")
     order = _get_order(db, order_id)
     if not order:
         return None
-    if order.status != "delivered":
+    # Allow exchange on delivered orders and orders that already had partial
+    # returns or exchanges (status becomes 'return requested' / 'exchange requested')
+    allowed = {"delivered", "return requested", "exchange requested"}
+    if order.status not in allowed:
         return (
             f"Policy violation: cannot exchange items from order {order_id} — "
             f"status is '{order.status}', must be 'delivered'."
