@@ -15,6 +15,7 @@ from tau2.data_model.message import (
     Message,
     MultiToolMessage,
     SystemMessage,
+    ToolMessage,
     UserMessage,
 )
 from tau2.data_model.tasks import Action, Task
@@ -124,7 +125,27 @@ class LLMAgent(
             state.messages.extend(message.tool_messages)
         else:
             state.messages.append(message)
+
+        # Amplify verifier feedback: collect any [VERIFIER] errors from tool
+        # messages and inject them as a prominent system message so the agent
+        # attends to the feedback and corrects its behaviour.
+        verifier_feedbacks = []
+        recent_msgs = state.messages[-10:]  # only look at recent messages
+        for m in recent_msgs:
+            if isinstance(m, ToolMessage) and m.error and m.content and "[VERIFIER]" in m.content:
+                verifier_feedbacks.append(m.content)
+
         messages = state.system_messages + state.messages
+        if verifier_feedbacks:
+            nudge = (
+                "IMPORTANT: Your previous tool call was rejected by the policy verifier. "
+                "You MUST address the following feedback before retrying. "
+                "Do NOT repeat the same tool call with the same arguments.\n\n"
+                + "\n".join(verifier_feedbacks)
+                + "\n\nFix the issue described above. Use different arguments, a different tool, or ask the user for clarification."
+            )
+            messages = messages + [SystemMessage(role="system", content=nudge)]
+
         assistant_message = generate(
             model=self.llm,
             tools=self.tools,
@@ -470,12 +491,28 @@ class LLMSoloAgent(
             model=self.llm,
             tools=self.tools,
             messages=messages,
-            tool_choice="required",
+            tool_choice="auto",
             call_name="agent_solo_response",
             **self.llm_args,
         )
         if not assistant_message.is_tool_call():
-            raise ValueError("LLMSoloAgent only supports tool calls.")
+            # If model didn't make a tool call, check if it's trying to stop
+            if assistant_message.content and self.STOP_TOKEN in assistant_message.content:
+                return assistant_message, state
+            # Model responded with text instead of a tool call — append it and
+            # retry once with tool_choice="required" to nudge it back
+            state.messages.append(assistant_message)
+            messages = state.system_messages + state.messages
+            assistant_message = generate(
+                model=self.llm,
+                tools=self.tools,
+                messages=messages,
+                tool_choice="required",
+                call_name="agent_solo_response_retry",
+                **self.llm_args,
+            )
+            if not assistant_message.is_tool_call():
+                raise ValueError("LLMSoloAgent only supports tool calls.")
         message = self._check_if_stop_toolcall(assistant_message)
         state.messages.append(assistant_message)
         return assistant_message, state

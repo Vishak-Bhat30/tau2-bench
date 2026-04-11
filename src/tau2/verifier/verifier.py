@@ -572,6 +572,13 @@ class PolicyVerifier:
                 self._block_counts[tool_name] = self._block_counts.get(tool_name, 0) + 1
                 return f"[VERIFIER] {item_violation}"
 
+        # General argument validation using SLM + user scenario
+        if self._user_instructions and not self.cheap_only:
+            arg_violation = self._check_tool_args(tool_name, tool_args, conversation)
+            if arg_violation:
+                self._block_counts[tool_name] = self._block_counts.get(tool_name, 0) + 1
+                return f"[VERIFIER] {arg_violation}"
+
         return None
 
     def _check_item_args(self, tool_name: str, tool_args: dict, conversation: list[dict]) -> str | None:
@@ -642,6 +649,91 @@ class PolicyVerifier:
             f"You selected: {items_str}. "
             f"Issue: {match_answer.strip()}. "
             f"Please select the correct item variant(s)."
+        )
+
+    # ---- key args to validate per tool (domain-agnostic) ----
+    # Only ID-type args that the SLM can reliably verify (no amounts/values).
+    _KEY_ARGS_BY_TOOL: dict[str, list[str]] = {
+        # Airline
+        "book_reservation": ["user_id"],
+        "cancel_reservation": ["reservation_id"],
+        "update_reservation_flights": ["reservation_id"],
+        "update_reservation_baggages": ["reservation_id"],
+        "update_reservation_passengers": ["reservation_id"],
+        "send_certificate": ["reservation_id"],
+        # Retail
+        "cancel_pending_order": ["order_id"],
+        "modify_pending_order_items": ["order_id"],
+        "modify_pending_order_payment": ["order_id"],
+        "modify_pending_order_address": ["order_id"],
+        "return_delivered_order_items": ["order_id"],
+        "exchange_delivered_order_items": ["order_id"],
+        "modify_user_address": ["user_id"],
+        # Telecom
+        "suspend_line": ["customer_id", "line_id"],
+        "resume_line": ["customer_id", "line_id"],
+        "send_payment_request": ["customer_id", "bill_id"],
+        "refuel_data": ["customer_id", "line_id"],
+    }
+
+    def _check_tool_args(self, tool_name: str, tool_args: dict, conversation: list[dict]) -> str | None:
+        """
+        General argument validation using SLM + user scenario.
+
+        Only validates ID-type arguments (order_id, reservation_id, etc.)
+        that the SLM can reliably extract from the user scenario.
+        Does NOT validate amounts, items, or other values that require
+        deeper reasoning (those are handled by domain-specific rules).
+        """
+        # Only check tools we have key-arg definitions for
+        key_args = self._KEY_ARGS_BY_TOOL.get(tool_name)
+        if not key_args:
+            return None
+
+        # Skip transfer_to_human_agents — no args to validate
+        if tool_name == "transfer_to_human_agents":
+            return None
+
+        import json as _json
+        from tau2.verifier.slm_helper import slm_extract
+
+        # Build a representation of the actual ID args being passed
+        actual = {k: tool_args.get(k) for k in key_args if tool_args.get(k) is not None}
+        if not actual:
+            return None
+        actual_str = _json.dumps(actual, default=str)
+
+        # Ask SLM to validate IDs against the user scenario + conversation
+        prompt = (
+            f"The agent is calling tool `{tool_name}` with these ID arguments:\n"
+            f"{actual_str}\n\n"
+            f"Based on the user scenario AND conversation below, "
+            f"are these IDs correct? Only check IDs — ignore amounts and other values.\n"
+            f"- Is the reservation_id / order_id / customer_id / line_id / bill_id "
+            f"the one the user mentioned or that appears in the conversation?\n\n"
+            f"User scenario:\n{self._user_instructions[:2000]}\n\n"
+            f"If the IDs are correct, answer ONLY 'yes'.\n"
+            f"If an ID is wrong, answer: 'wrong: <param_name> should be <correct_value> not <wrong_value>'"
+        )
+        answer = slm_extract(prompt, conversation, max_tokens=256)
+
+        result = answer.lower().strip()
+        if result.startswith("yes"):
+            return None
+
+        # Accept verbose "correct" answers that don't start with "yes"
+        _PASS_MARKERS = ("correct", "match", "right", "valid", "straightforward", "confirms")
+        if any(m in result for m in _PASS_MARKERS) and "wrong" not in result and "incorrect" not in result:
+            return None
+
+        # Only act on "wrong:" answers to avoid false positives
+        if "wrong" not in result:
+            return None
+
+        return (
+            f"Argument mismatch: {answer.strip()}. "
+            f"You called `{tool_name}` with {actual_str}. "
+            f"Please check the user's request and use the correct arguments."
         )
 
     def reset(self):

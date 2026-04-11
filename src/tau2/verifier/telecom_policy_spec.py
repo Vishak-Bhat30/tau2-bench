@@ -206,18 +206,22 @@ def rule_arg_refuel_line(tool_name, tool_args, conversation, db):
         "Reply with ONLY the phone number or line ID.",
         conversation,
     )
-    mentioned = answer.strip().replace("-", "").replace(" ", "")
-    line_phone = line.phone_number.replace("-", "").replace(" ", "")
+    raw_answer = answer.strip()
+    mentioned = raw_answer.replace("-", "").replace(" ", "").lower()
+    line_phone = line.phone_number.replace("-", "").replace(" ", "").lower()
+    line_id_lower = line_id.lower()
 
-    # Match either line_id or phone number
-    if (line_id.lower() not in mentioned.lower() and
-            line_phone not in mentioned and
-            mentioned not in line_phone):
-        return (
-            f"Argument mismatch: refueling line {line_id} ({line.phone_number}) "
-            f"but the user mentioned: {answer}"
-        )
-    return None
+    # Match either line_id or phone number anywhere in the SLM answer
+    if (line_id_lower in mentioned or
+            line_phone in mentioned or
+            mentioned in line_phone or
+            line_id_lower in raw_answer.lower()):
+        return None
+
+    return (
+        f"Argument mismatch: refueling line {line_id} ({line.phone_number}) "
+        f"but the user mentioned: {raw_answer}"
+    )
 
 
 def rule_arg_payment_bill(tool_name, tool_args, conversation, db):

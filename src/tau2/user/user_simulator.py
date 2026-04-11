@@ -269,7 +269,7 @@ class UserSimulator(
 class DummyUser(UserSimulator):
     """A dummy user to run a agent solo simulation."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__(llm="dummy")
 
     def get_init_state(

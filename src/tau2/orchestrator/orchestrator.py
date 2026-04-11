@@ -138,6 +138,7 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         self.done: bool = False
         self.termination_reason: Optional[TerminationReason] = None
         self.num_errors: int = 0
+        self.num_verifier_errors: int = 0
         self._run_start_time: Optional[str] = None
         self._run_start_perf: Optional[float] = None
 
@@ -337,7 +338,8 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                     conversation=conversation,
                 )
                 if feedback:
-                    logger.info("Verifier blocked %s: %s", tool_call.name, feedback)
+                    self.num_verifier_errors += 1
+                    logger.info("Verifier blocked %s (%d total): %s", tool_call.name, self.num_verifier_errors, feedback)
                     tool_results.append(
                         ToolMessage(
                             id=tool_call.id,
@@ -347,6 +349,11 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                             requestor=tool_call.requestor,
                         )
                     )
+                    # Stop simulation after 3 verifier errors
+                    if self.num_verifier_errors >= 3:
+                        logger.info("Stopping simulation: %d verifier errors reached limit", self.num_verifier_errors)
+                        self.done = True
+                        self.termination_reason = TerminationReason.TOO_MANY_ERRORS
                     continue
             # --- Normal execution ---
             tool_result = self.environment.get_response(tool_call)
