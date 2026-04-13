@@ -1,5 +1,6 @@
 """
-Telecom Policy Spec — verifiable rules extracted from main_policy.md.
+Telecom Policy Spec — verifiable rules extracted from main_policy_solo.md
+and tech_support_workflow_solo.md.
 
 Each rule is a function that takes:
   - tool_name: str           (the tool being called)
@@ -52,6 +53,14 @@ def _find_bill(db, bill_id: str):
     return None
 
 
+def _find_plan(db, plan_id: str):
+    """Find plan by ID."""
+    for plan in db.plans:
+        if plan.plan_id == plan_id:
+            return plan
+    return None
+
+
 def _get_customer_bills(db, customer_id: str):
     """Get all bills for a customer."""
     customer = _find_customer(db, customer_id)
@@ -68,8 +77,19 @@ def _has_overdue_bills(db, customer_id: str) -> bool:
     return False
 
 
+def _has_awaiting_payment_bill(db, customer_id: str) -> bool:
+    """Check if customer already has a bill in AWAITING PAYMENT status."""
+    for bill in _get_customer_bills(db, customer_id):
+        if bill and bill.status.value == "Awaiting Payment":
+            return True
+    return False
+
+
 # ============================================================================
 #  REFUEL DATA rules
+#  Policy: "The maximum amount of data that can be refueled is 2GB."
+#  Policy: Line must be active to refuel.
+#  Policy: "Know how much data they want to refuel" / "Confirm the price"
 # ============================================================================
 
 def rule_refuel_max_2gb(tool_name, tool_args, conversation, db):
@@ -107,6 +127,8 @@ def rule_refuel_line_active(tool_name, tool_args, conversation, db):
 
 # ============================================================================
 #  SEND PAYMENT REQUEST rules
+#  Policy: "Check the bill status to make sure it is overdue."
+#  Policy: "A user can only have one bill in the AWAITING PAYMENT status at a time."
 # ============================================================================
 
 def rule_payment_bill_must_be_overdue(tool_name, tool_args, conversation, db):
@@ -125,8 +147,28 @@ def rule_payment_bill_must_be_overdue(tool_name, tool_args, conversation, db):
     return None
 
 
+def rule_payment_no_duplicate_awaiting(tool_name, tool_args, conversation, db):
+    """A user can only have one bill in AWAITING PAYMENT status at a time."""
+    if tool_name != "send_payment_request":
+        return None
+    customer_id = tool_args.get("customer_id", "")
+    if not customer_id:
+        return None
+    if _has_awaiting_payment_bill(db, customer_id):
+        return (
+            f"Policy violation: customer {customer_id} already has a bill in "
+            f"'Awaiting Payment' status. Only one bill can be awaiting payment "
+            f"at a time."
+        )
+    return None
+
+
 # ============================================================================
 #  RESUME LINE rules
+#  Policy: "You are not allowed to lift the suspension if the line's contract
+#           end date is in the past."
+#  Policy: "You are allowed to lift the suspension after the user has paid
+#           all their overdue bills."
 # ============================================================================
 
 def rule_resume_contract_not_expired(tool_name, tool_args, conversation, db):
@@ -161,6 +203,9 @@ def rule_resume_all_bills_paid(tool_name, tool_args, conversation, db):
 
 # ============================================================================
 #  SUSPEND LINE rules
+#  Policy: "A line can be suspended for the following reasons:
+#           - The user has an overdue bill.
+#           - The line's contract end date is in the past."
 # ============================================================================
 
 def rule_suspend_valid_reason(tool_name, tool_args, conversation, db):
@@ -185,6 +230,67 @@ def rule_suspend_valid_reason(tool_name, tool_args, conversation, db):
 
 
 # ============================================================================
+#  ENABLE ROAMING rules
+#  Policy: "If a user is traveling outside their home network, you should
+#           check if the line is roaming enabled. If it is not, you should
+#           enable it at no cost for the user."
+#  (No rule needed to block enable_roaming — it's always free and allowed.
+#   But disable_roaming should not happen during tech support for a traveling user.)
+# ============================================================================
+
+def rule_disable_roaming_not_while_traveling(tool_name, tool_args, conversation, db):
+    """Should not disable roaming if the user is traveling and needs data."""
+    if tool_name != "disable_roaming":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "Is the user currently traveling outside their home network or abroad "
+        "and experiencing data connectivity issues? "
+        "Answer 'yes' or 'no'.",
+        conversation,
+    )
+    if answer.strip().lower().startswith("yes"):
+        return (
+            "Policy violation: should not disable roaming when the user is "
+            "traveling outside their home network. Roaming should be enabled "
+            "at no cost for traveling users."
+        )
+    return None
+
+
+# ============================================================================
+#  TRANSFER TO HUMAN AGENT rules
+#  Policy: "You should escalate to a human agent if and only if the request
+#           cannot be handled within the scope of your actions."
+#  Policy: "You should try your best to resolve the issue before escalating."
+# ============================================================================
+
+def rule_transfer_only_when_needed(tool_name, tool_args, conversation, db):
+    """Transfer to human only when request cannot be handled by agent."""
+    if tool_name != "transfer_to_human_agents":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+    answer = slm_extract(
+        "Is the user's request something the agent cannot handle with the "
+        "available telecom tools (billing, line suspend/resume, data refuel, "
+        "roaming, plan lookup, and device troubleshooting actions like "
+        "toggling airplane mode, mobile data, data saver, VPN, Wi-Fi calling, "
+        "reseating SIM, resetting APN, rebooting device, granting permissions, "
+        "running speed tests)? "
+        "Answer 'yes' if the request is outside what the tools can do, "
+        "'no' if the agent could still handle it.",
+        conversation,
+    )
+    if answer.strip().lower().startswith("no"):
+        return (
+            "Policy violation: transferring to human agent but the user's "
+            "request can likely be handled with the available tools. "
+            "Try to resolve the request first."
+        )
+    return None
+
+
+# ============================================================================
 #  SLM-based argument validation rules
 # ============================================================================
 
@@ -194,7 +300,6 @@ def rule_arg_refuel_line(tool_name, tool_args, conversation, db):
         return None
     from tau2.verifier.slm_helper import slm_extract
     line_id = tool_args.get("line_id", "")
-    customer_id = tool_args.get("customer_id", "")
 
     # Find the phone number for this line to check against conversation
     line = _find_line(db, line_id)
@@ -216,6 +321,13 @@ def rule_arg_refuel_line(tool_name, tool_args, conversation, db):
             line_phone in mentioned or
             mentioned in line_phone or
             line_id_lower in raw_answer.lower()):
+        return None
+
+    # Fallback: check if the line_id appears in the conversation itself
+    convo_text = " ".join(
+        str(m.get("content", "")) for m in conversation
+    ).lower()
+    if line_id_lower in convo_text:
         return None
 
     return (
@@ -240,6 +352,12 @@ def rule_arg_payment_bill(tool_name, tool_args, conversation, db):
     mentioned = answer.strip().upper().replace(" ", "").replace("-", "")
     target = bill_id.upper().replace("-", "")
     if target and mentioned and target not in mentioned and mentioned not in target:
+        # Fallback: check if the bill_id appears in the conversation itself
+        convo_text = " ".join(
+            str(m.get("content", "")) for m in conversation
+        ).upper()
+        if target in convo_text:
+            return None
         return (
             f"Argument mismatch: sending payment for bill {bill_id} "
             f"but the user mentioned: {answer}"
@@ -247,29 +365,175 @@ def rule_arg_payment_bill(tool_name, tool_args, conversation, db):
     return None
 
 
-# ============================================================================
-#  TRANSFER rule (SLM)
-# ============================================================================
-
-def rule_transfer_only_when_needed(tool_name, tool_args, conversation, db):
-    """Transfer to human only when request cannot be handled by agent."""
-    if tool_name != "transfer_to_human_agents":
+def rule_arg_resume_line(tool_name, tool_args, conversation, db):
+    """Verify resume_line targets the correct line and customer."""
+    if tool_name != "resume_line":
         return None
     from tau2.verifier.slm_helper import slm_extract
+    line_id = tool_args.get("line_id", "")
+    customer_id = tool_args.get("customer_id", "")
+
+    line = _find_line(db, line_id)
+    if not line:
+        return None
+
+    # Check the customer owns this line
+    customer = _find_customer(db, customer_id)
+    if customer and line_id not in customer.line_ids:
+        return (
+            f"Argument mismatch: line {line_id} does not belong to "
+            f"customer {customer_id}."
+        )
+
     answer = slm_extract(
-        "Is the user's request something the agent cannot handle with the "
-        "available telecom tools (billing, line suspend/resume, data refuel, "
-        "roaming, plan lookup)? "
-        "Answer 'yes' if the request is outside what the tools can do, "
-        "'no' if the agent could still handle it.",
+        "What phone number or line does the user want to resume/unsuspend? "
+        "Reply with ONLY the phone number or line ID.",
         conversation,
     )
-    if answer.strip().lower().startswith("no"):
+    raw_answer = answer.strip()
+    mentioned = raw_answer.replace("-", "").replace(" ", "").lower()
+    line_phone = line.phone_number.replace("-", "").replace(" ", "").lower()
+    line_id_lower = line_id.lower()
+
+    if (line_id_lower in mentioned or
+            line_phone in mentioned or
+            mentioned in line_phone or
+            line_id_lower in raw_answer.lower()):
+        return None
+
+    convo_text = " ".join(
+        str(m.get("content", "")) for m in conversation
+    ).lower()
+    if line_id_lower in convo_text or line_phone in convo_text:
+        return None
+
+    return (
+        f"Argument mismatch: resuming line {line_id} ({line.phone_number}) "
+        f"but the user mentioned: {raw_answer}"
+    )
+
+
+def rule_arg_enable_roaming_line(tool_name, tool_args, conversation, db):
+    """Verify enable_roaming targets the correct line."""
+    if tool_name != "enable_roaming":
+        return None
+    from tau2.verifier.slm_helper import slm_extract
+    line_id = tool_args.get("line_id", "")
+    customer_id = tool_args.get("customer_id", "")
+
+    line = _find_line(db, line_id)
+    if not line:
+        return None
+
+    # Check the customer owns this line
+    customer = _find_customer(db, customer_id)
+    if customer and line_id not in customer.line_ids:
         return (
-            "Policy violation: transferring to human agent but the user's "
-            "request can likely be handled with the available tools. "
-            "Try to resolve the request first."
+            f"Argument mismatch: line {line_id} does not belong to "
+            f"customer {customer_id}."
         )
+
+    answer = slm_extract(
+        "What phone number or line is the user calling about? "
+        "Reply with ONLY the phone number or line ID.",
+        conversation,
+    )
+    raw_answer = answer.strip()
+    mentioned = raw_answer.replace("-", "").replace(" ", "").lower()
+    line_phone = line.phone_number.replace("-", "").replace(" ", "").lower()
+    line_id_lower = line_id.lower()
+
+    if (line_id_lower in mentioned or
+            line_phone in mentioned or
+            mentioned in line_phone or
+            line_id_lower in raw_answer.lower()):
+        return None
+
+    convo_text = " ".join(
+        str(m.get("content", "")) for m in conversation
+    ).lower()
+    if line_id_lower in convo_text or line_phone in convo_text:
+        return None
+
+    return (
+        f"Argument mismatch: enabling roaming on line {line_id} ({line.phone_number}) "
+        f"but the user mentioned: {raw_answer}"
+    )
+
+
+# ============================================================================
+#  CUSTOMER LOOKUP rules
+#  Policy: "For name lookup, date of birth is required for verification."
+# ============================================================================
+
+def rule_customer_lookup_name_requires_dob(tool_name, tool_args, conversation, db):
+    """Name-based customer lookup must include date of birth."""
+    if tool_name != "get_customer_by_name":
+        return None
+    dob = tool_args.get("dob", "")
+    if not dob or not dob.strip():
+        return (
+            "Policy violation: looking up customer by name requires "
+            "date of birth for verification purposes."
+        )
+    return None
+
+
+# ============================================================================
+#  Tech Support Workflow — Path 1: No Service
+#  Policy (Step 1.4): "If the line is suspended ... follow the instructions
+#          in the main policy for line suspension."
+#  (resume_line rules already cover the main policy constraints.)
+#
+#  Policy (Step 1.2): "If SIM is LOCKED with PIN/PUK — Escalate to
+#          technical support for assistance with SIM security."
+#  (Transfer rule already prevents premature transfers; SIM lock is a valid
+#   reason to escalate.)
+# ============================================================================
+
+
+# ============================================================================
+#  Tech Support Workflow — Path 2: Data Issues
+#  Policy (Step 2.1.4): "Check if user's data usage has exceeded their
+#           data limit." If exceeded, refuel or change plan.
+#  Policy: Refuel data max 2GB (already covered).
+# ============================================================================
+
+def rule_refuel_only_when_data_exceeded(tool_name, tool_args, conversation, db):
+    """Data refueling should only be done when data usage exceeds the limit."""
+    if tool_name != "refuel_data":
+        return None
+    line_id = tool_args.get("line_id", "")
+    customer_id = tool_args.get("customer_id", "")
+
+    line = _find_line(db, line_id)
+    if not line:
+        return None
+
+    plan = _find_plan(db, line.plan_id)
+    if not plan:
+        return None
+
+    total_available = plan.data_limit_gb + line.data_refueling_gb
+    if line.data_used_gb <= total_available:
+        # Data is not exceeded — refueling might still be requested by user
+        # proactively, so only warn if usage is well under limit
+        if line.data_used_gb < plan.data_limit_gb * 0.8:
+            from tau2.verifier.slm_helper import slm_extract
+            answer = slm_extract(
+                "Did the user explicitly ask to add/refuel more data to their "
+                "line, or is the agent doing it as part of troubleshooting a "
+                "data connectivity issue? Answer 'user requested' or "
+                "'troubleshooting'.",
+                conversation,
+            )
+            if "troubleshooting" in answer.strip().lower():
+                return (
+                    f"Policy violation: data refueling line {line_id} but data "
+                    f"usage ({line.data_used_gb} GB) is well below the limit "
+                    f"({plan.data_limit_gb} GB). Data connectivity issues should "
+                    f"be diagnosed through the troubleshooting workflow first."
+                )
     return None
 
 
@@ -281,15 +545,23 @@ ALL_RULES = [
     # Refuel data
     rule_refuel_max_2gb,
     rule_refuel_line_active,
+    rule_refuel_only_when_data_exceeded,
     rule_arg_refuel_line,
     # Payment
     rule_payment_bill_must_be_overdue,
+    rule_payment_no_duplicate_awaiting,
     rule_arg_payment_bill,
     # Resume line
     rule_resume_contract_not_expired,
     rule_resume_all_bills_paid,
+    rule_arg_resume_line,
     # Suspend line
     rule_suspend_valid_reason,
+    # Roaming
+    rule_disable_roaming_not_while_traveling,
+    rule_arg_enable_roaming_line,
+    # Customer lookup
+    rule_customer_lookup_name_requires_dob,
     # Transfer
     rule_transfer_only_when_needed,
 ]
@@ -298,11 +570,23 @@ CHEAP_RULES = [
     rule_refuel_max_2gb,
     rule_refuel_line_active,
     rule_payment_bill_must_be_overdue,
+    rule_payment_no_duplicate_awaiting,
     rule_resume_contract_not_expired,
     rule_resume_all_bills_paid,
+    rule_customer_lookup_name_requires_dob,
 ]
 
 SLM_RULES = [r for r in ALL_RULES if r not in CHEAP_RULES]
+
+# Argument-accuracy rules: these only need the ticket/instructions context,
+# not the full conversation. Passing a shorter context to the SLM yields
+# more reliable extraction and is cheaper.
+ARG_RULES = {
+    rule_arg_refuel_line,
+    rule_arg_payment_bill,
+    rule_arg_resume_line,
+    rule_arg_enable_roaming_line,
+}
 
 
 def check_all(
@@ -311,13 +595,29 @@ def check_all(
     conversation: list[dict],
     db,
     cheap_only: bool = False,
+    **kwargs,
 ) -> str | None:
     """Run all applicable telecom policy rules against a tool call."""
     rules = CHEAP_RULES if cheap_only else ALL_RULES
 
+    # Extract user instructions (ticket) from verifier for arg-accuracy rules.
+    # This is much shorter than the full conversation and contains all the
+    # key identifiers (phone number, customer name, etc.) upfront.
+    verifier = kwargs.get("verifier")
+    user_instructions = (
+        getattr(verifier, "_user_instructions", None) if verifier else None
+    )
+    if user_instructions:
+        short_context = [{"role": "system", "content": user_instructions}]
+    else:
+        short_context = conversation
+
     for rule_fn in rules:
         try:
-            result = rule_fn(tool_name, tool_args, conversation, db)
+            # Arg-accuracy rules use the short ticket context;
+            # policy-constraint rules use the full conversation.
+            ctx = short_context if rule_fn in ARG_RULES else conversation
+            result = rule_fn(tool_name, tool_args, ctx, db)
             if result is not None:
                 logger.info("Rule %s violated: %s", rule_fn.__name__, result)
                 return result

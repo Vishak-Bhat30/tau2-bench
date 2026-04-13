@@ -1,0 +1,4 @@
+domain,num_examples,CoT_Avg_of_5,CoT_soundness,CoT_Tokens,CoT_token_pct,interwhen_Avg_of_5,interwhen_soundness,interwhen_Tokens,interwhen_pct_Tokens
+airline,50,0.644,0.996,18987639,100.00%,0.604,0.96,28183893,148.43%
+retail,114,0.5702,1.0,53931672,100.00%,0.5298,0.8789,64157892,118.96%
+telecom,114,0.2333,0.9596,107669671,100.00%,0.2281,0.8754,189749949,176.23%

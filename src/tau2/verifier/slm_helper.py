@@ -151,7 +151,7 @@ def slm_extract(question: str, conversation: list[dict], max_tokens: int = 256) 
     """
     # Build a compact transcript for the SLM
     transcript_lines = []
-    for msg in conversation[-20:]:  # last 20 messages is enough context
+    for msg in conversation[-30:]:  # last 30 messages to match orchestrator window
         role = msg.get("role", "?")
         content = msg.get("content", "")
         if content:

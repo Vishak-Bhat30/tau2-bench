@@ -130,19 +130,33 @@ class LLMAgent(
         # messages and inject them as a prominent system message so the agent
         # attends to the feedback and corrects its behaviour.
         verifier_feedbacks = []
+        verifier_hints = []
         recent_msgs = state.messages[-10:]  # only look at recent messages
         for m in recent_msgs:
             if isinstance(m, ToolMessage) and m.error and m.content and "[VERIFIER]" in m.content:
                 verifier_feedbacks.append(m.content)
+                # Extract [HINT] if present
+                if "[HINT]" in m.content:
+                    hint_part = m.content.split("[HINT]", 1)[1].strip()
+                    if hint_part:
+                        verifier_hints.append(hint_part)
 
         messages = state.system_messages + state.messages
         if verifier_feedbacks:
             nudge = (
-                "IMPORTANT: Your previous tool call was rejected by the policy verifier. "
-                "You MUST address the following feedback before retrying. "
-                "Do NOT repeat the same tool call with the same arguments.\n\n"
+                "IMPORTANT: Your previous tool call was REJECTED by the policy verifier.\n\n"
+                "VIOLATION:\n"
                 + "\n".join(verifier_feedbacks)
-                + "\n\nFix the issue described above. Use different arguments, a different tool, or ask the user for clarification."
+            )
+            if verifier_hints:
+                nudge += (
+                    "\n\nCORRECTIVE ACTION — here is what you should do instead:\n"
+                    + "\n".join(f"• {h}" for h in verifier_hints)
+                )
+            nudge += (
+                "\n\nYou MUST fix the issue before retrying. "
+                "Either use different arguments, a different tool, "
+                "or explain to the user why their request cannot be fulfilled."
             )
             messages = messages + [SystemMessage(role="system", content=nudge)]
 

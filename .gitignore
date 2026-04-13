@@ -226,4 +226,6 @@ data/simulations/.credentials/
 run2.sh
 run3.sh
 run.sh
+run_solo.sh
+runn.sh
 

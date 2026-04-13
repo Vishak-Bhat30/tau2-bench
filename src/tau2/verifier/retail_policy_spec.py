@@ -636,6 +636,7 @@ def check_all(
     conversation: list[dict],
     db,
     cheap_only: bool = False,
+    **kwargs,
 ) -> str | None:
     """Run all applicable retail policy rules against a tool call."""
     rules = CHEAP_RULES if cheap_only else ALL_RULES
