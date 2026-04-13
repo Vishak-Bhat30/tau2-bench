@@ -1,3 +1,10 @@
+# Files containing secrets
+run_solo.sh
+run2.sh
+run3.sh
+runn.sh
+vishak.md
+
 *.tmp
 .DS_Store
 profile.json
