@@ -265,29 +265,144 @@ def rule_disable_roaming_not_while_traveling(tool_name, tool_args, conversation,
 #  Policy: "You should try your best to resolve the issue before escalating."
 # ============================================================================
 
-def rule_transfer_only_when_needed(tool_name, tool_args, conversation, db):
-    """Transfer to human only when request cannot be handled by agent."""
+def _extract_tools_called(conversation: list[dict]) -> set[str]:
+    """Extract all tool names already called from conversation history."""
+    tools = set()
+    for msg in conversation:
+        # Solo mode: tool calls are in assistant messages
+        if msg.get("role") == "assistant":
+            for tc in (msg.get("tool_calls") or []):
+                name = tc.get("name", tc.get("function", {}).get("name", ""))
+                if name:
+                    tools.add(name)
+    return tools
+
+
+def _infer_issue_type(conversation: list[dict], **kwargs) -> str | None:
+    """Infer the issue type from the user's initial ticket/instructions."""
+    # Use user_instructions (ticket) if available — most reliable source.
+    verifier = kwargs.get("verifier")
+    user_instr = getattr(verifier, "_user_instructions", None) if verifier else None
+    if user_instr:
+        text = user_instr.lower()
+    else:
+        # Fallback: use first message (in solo mode this is the assistant's
+        # initial thinking which quotes the ticket).
+        text = ""
+        for msg in conversation:
+            if msg.get("content"):
+                text = str(msg["content"]).lower()
+                break
+
+    # Check for MMS keywords first (MMS is a superset of data/service)
+    if any(kw in text for kw in (
+        "mms", "picture message", "send picture", "send photo",
+        "multimedia message",
+    )):
+        return "mms"
+    # Check for data issue keywords
+    if any(kw in text for kw in (
+        "mobile data", "data issue", "internet",
+        "slow data", "no data", "data not working",
+        "cannot connect", "browsing", "data plan",
+        "data speed", "connectivity issue",
+    )):
+        return "data"
+    # Check for service keywords
+    if any(kw in text for kw in (
+        "no service", "no signal", "no network", "suspended",
+        "can't make calls", "no connection", "service issue",
+        "cannot call", "line suspended", "phone service",
+    )):
+        return "service"
+    return None
+
+
+# Required troubleshooting tools per issue type.
+# We require the DIAGNOSTIC checks (not the fix tools), since the agent
+# must at least check each category before deciding it's not relevant.
+# If a diagnostic reveals a problem, the agent should fix it.
+_REQUIRED_TOOLS: dict[str, dict[str, str]] = {
+    "data": {
+        "check_data_restriction_status": (
+            "Check if Data Saver mode is on — if so, toggle it off "
+            "with toggle_data_saver_mode"
+        ),
+        "check_network_mode_preference": (
+            "Check the network mode preference — if it's wrong, fix it "
+            "with set_network_mode_preference"
+        ),
+        "get_data_usage": (
+            "Check if user's data usage has exceeded their limit — "
+            "if so, refuel with refuel_data"
+        ),
+    },
+    "mms": {
+        "check_app_permissions": (
+            "Check messaging app permissions — if sms or storage is "
+            "missing, grant it with grant_app_permission('messaging', ...)"
+        ),
+        "check_apn_settings": (
+            "Check APN/MMSC settings — if MMSC URL is missing, reset "
+            "with reset_apn_settings then reboot_device"
+        ),
+        "check_wifi_calling_status": (
+            "Check if Wi-Fi Calling is on — if so, disable it with "
+            "toggle_wifi_calling (it can interfere with MMS)"
+        ),
+        "check_network_mode_preference": (
+            "Check network mode — MMS requires at least 3G, fix with "
+            "set_network_mode_preference if set to 2G only"
+        ),
+        "get_data_usage": (
+            "Check if data limit is exceeded — MMS requires active "
+            "data, refuel with refuel_data if needed"
+        ),
+    },
+    "service": {
+        "check_network_status": (
+            "Check network status including airplane mode and data settings"
+        ),
+        "check_sim_status": (
+            "Check SIM card status — reseat with reseat_sim_card if missing, "
+            "or escalate if locked"
+        ),
+        "check_apn_settings": (
+            "Check APN settings — reset with reset_apn_settings + "
+            "reboot_device if incorrect"
+        ),
+    },
+}
+
+
+def rule_transfer_missing_tools(tool_name, tool_args, conversation, db, **kwargs):
+    """Block transfer if the agent hasn't tried required troubleshooting tools."""
     if tool_name != "transfer_to_human_agents":
         return None
-    from tau2.verifier.slm_helper import slm_extract
-    answer = slm_extract(
-        "Is the user's request something the agent cannot handle with the "
-        "available telecom tools (billing, line suspend/resume, data refuel, "
-        "roaming, plan lookup, and device troubleshooting actions like "
-        "toggling airplane mode, mobile data, data saver, VPN, Wi-Fi calling, "
-        "reseating SIM, resetting APN, rebooting device, granting permissions, "
-        "running speed tests)? "
-        "Answer 'yes' if the request is outside what the tools can do, "
-        "'no' if the agent could still handle it.",
-        conversation,
+
+    tools_called = _extract_tools_called(conversation)
+    issue_type = _infer_issue_type(conversation, **kwargs)
+
+    if not issue_type:
+        return None  # Can't determine issue type, allow transfer
+
+    required = _REQUIRED_TOOLS.get(issue_type, {})
+    missing = []
+    for tool, hint in required.items():
+        if tool not in tools_called:
+            missing.append(f"  - {tool}: {hint}")
+
+    if not missing:
+        return None  # All required tools tried, transfer is valid
+
+    missing_str = "\n".join(missing)
+    return (
+        f"Policy violation: you are escalating to a human agent but have not "
+        f"tried the following troubleshooting steps:\n"
+        f"{missing_str}\n"
+        f"Please try these tools before escalating. Only transfer to a human "
+        f"agent after exhausting all available troubleshooting options."
     )
-    if answer.strip().lower().startswith("no"):
-        return (
-            "Policy violation: transferring to human agent but the user's "
-            "request can likely be handled with the available tools. "
-            "Try to resolve the request first."
-        )
-    return None
 
 
 # ============================================================================
@@ -563,7 +678,7 @@ ALL_RULES = [
     # Customer lookup
     rule_customer_lookup_name_requires_dob,
     # Transfer
-    rule_transfer_only_when_needed,
+    rule_transfer_missing_tools,
 ]
 
 CHEAP_RULES = [
@@ -574,6 +689,7 @@ CHEAP_RULES = [
     rule_resume_contract_not_expired,
     rule_resume_all_bills_paid,
     rule_customer_lookup_name_requires_dob,
+    rule_transfer_missing_tools,
 ]
 
 SLM_RULES = [r for r in ALL_RULES if r not in CHEAP_RULES]
@@ -586,6 +702,11 @@ ARG_RULES = {
     rule_arg_payment_bill,
     rule_arg_resume_line,
     rule_arg_enable_roaming_line,
+}
+
+# Rules that need access to the verifier / kwargs (e.g., user_instructions).
+_KWARGS_RULES = {
+    rule_transfer_missing_tools,
 }
 
 
@@ -617,7 +738,10 @@ def check_all(
             # Arg-accuracy rules use the short ticket context;
             # policy-constraint rules use the full conversation.
             ctx = short_context if rule_fn in ARG_RULES else conversation
-            result = rule_fn(tool_name, tool_args, ctx, db)
+            if rule_fn in _KWARGS_RULES:
+                result = rule_fn(tool_name, tool_args, ctx, db, **kwargs)
+            else:
+                result = rule_fn(tool_name, tool_args, ctx, db)
             if result is not None:
                 logger.info("Rule %s violated: %s", rule_fn.__name__, result)
                 return result
