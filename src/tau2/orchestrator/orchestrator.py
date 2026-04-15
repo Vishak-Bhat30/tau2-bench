@@ -359,9 +359,22 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                         self.tool_call_verifier.record_tool_call(tool_call.name, tool_call.arguments)
                     elif tool_call.requestor == "user" and hasattr(self.tool_call_verifier, 'record_user_tool_call'):
                         self.tool_call_verifier.record_user_tool_call(tool_call.name)
-                    # --- Proactive policy annotation for read tools ---
-                    # DISABLED: annotations confuse the agent and cause DB regressions
-                    # (see analysis of IW_v2 vs CoT: all 17 regressing tasks had annotations)
+                    # --- Post-execution result check (e.g. wrong-line warning) ---
+                    if tool_call.requestor == "assistant" and hasattr(self.tool_call_verifier, 'check_result'):
+                        result_warning = self.tool_call_verifier.check_result(
+                            tool_name=tool_call.name,
+                            tool_args=tool_call.arguments,
+                            result_content=tool_result.content,
+                        )
+                        if result_warning:
+                            logger.info("Post-exec warning for %s: %s", tool_call.name, result_warning)
+                            tool_result = ToolMessage(
+                                id=tool_result.id,
+                                content=tool_result.content + "\n\n" + result_warning,
+                                role=tool_result.role,
+                                error=tool_result.error,
+                                requestor=tool_result.requestor,
+                            )
             tool_results.append(tool_result)
         return tool_results
 

@@ -156,6 +156,9 @@ class PolicyVerifier:
         # Expected user-side tools (for telecom)
         self._expected_user_tools: list[str] = []
 
+        # User's phone number (captured from get_customer_by_phone calls)
+        self._user_phone: str | None = None
+
         # Domain-specific tool sets
         self._write_tools = WRITE_TOOLS_BY_DOMAIN.get(domain, set())
         self._read_tools = READ_TOOLS_BY_DOMAIN.get(domain, set())
@@ -351,6 +354,12 @@ class PolicyVerifier:
     def record_tool_call(self, tool_name: str, tool_args: dict | None = None) -> None:
         """Record that a tool was successfully called (not blocked)."""
         self._called_all_tools.append(tool_name)
+        # Capture user phone from get_customer_by_phone for result checks
+        if tool_name == "get_customer_by_phone" and tool_args:
+            phone = tool_args.get("phone_number", "")
+            if phone:
+                self._user_phone = phone
+                logger.info("Captured user phone: %s", phone)
         if tool_name in self._write_tools:
             self._called_write_tools.append(tool_name)
             # Build a compact summary of what was done
@@ -402,6 +411,26 @@ class PolicyVerifier:
         if tool_name in USER_WRITE_TOOLS_TELECOM:
             self._called_user_tools.append(tool_name)
             logger.info("Recorded user tool call: %s (total: %d)", tool_name, len(self._called_user_tools))
+
+    def check_result(
+        self,
+        tool_name: str,
+        tool_args: dict,
+        result_content: str,
+    ) -> str | None:
+        """Check a tool result after execution for post-hoc warnings.
+
+        Returns a warning string to append to the result, or None.
+        """
+        if self.domain == "telecom":
+            from tau2.verifier.telecom_policy_spec import check_result_line_phone
+            return check_result_line_phone(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+                user_phone=self._user_phone,
+            )
+        return None
 
     def check_completion(self, conversation: list[dict]) -> str | None:
         """

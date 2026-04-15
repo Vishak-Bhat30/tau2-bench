@@ -14,6 +14,7 @@ TELECOM_MAIN_POLICY_SOLO_PATH = TELECOM_DATA_DIR / "main_policy_solo.md"
 TELECOM_TECH_SUPPORT_POLICY_MANUAL_SOLO_PATH = (
     TELECOM_DATA_DIR / "tech_support_manual.md"
 )
+
 TELECOM_TECH_SUPPORT_POLICY_WORKFLOW_SOLO_PATH = (
     TELECOM_DATA_DIR / "tech_support_workflow_solo.md"
 )

@@ -1,6 +1,4 @@
 """
-Telecom Policy Spec — verifiable rules extracted from main_policy_solo.md
-and tech_support_workflow_solo.md.
 
 Each rule is a function that takes:
   - tool_name: str           (the tool being called)
@@ -750,3 +748,53 @@ def check_all(
             continue
 
     return None
+
+
+# ============================================================================
+#  POST-EXECUTION RESULT CHECKS
+#  These run AFTER a tool executes, examining the result content.
+# ============================================================================
+
+def check_result_line_phone(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+    user_phone: str | None,
+) -> str | None:
+    """After get_details_by_id returns a line, check if its phone matches the user's phone.
+
+    If the agent looked up a line whose phone_number differs from the phone
+    the user called with (captured from get_customer_by_phone), inject a
+    warning so the agent knows to use a different line.
+    """
+    if tool_name != "get_details_by_id":
+        return None
+    if not user_phone:
+        return None
+
+    # Only applies to line lookups (line_id starts with L)
+    lookup_id = tool_args.get("id", "")
+    if not lookup_id.upper().startswith("L"):
+        return None
+
+    # Parse the result to extract the line's phone_number
+    import json
+    try:
+        data = json.loads(result_content)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    line_phone = data.get("phone_number", "")
+    if not line_phone:
+        return None
+
+    # Compare: if the line's phone matches the user's phone, no issue
+    if line_phone.strip() == user_phone.strip():
+        return None
+
+    return (
+        f"⚠️ WARNING: This line {lookup_id} has phone number {line_phone}, "
+        f"which does NOT match the customer's contact phone {user_phone}. "
+        f"This is likely NOT the correct line for the user's issue. "
+        f"Look up the line whose phone number matches {user_phone} instead."
+    )
