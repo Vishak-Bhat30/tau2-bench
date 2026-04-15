@@ -861,6 +861,12 @@ def run_domain(config: RunConfig) -> Results:
 
     # Load tasks
     task_set_name = config.task_set_name or config.domain
+    # In solo mode for telecom, use the solo task set (with updated ticket text)
+    solo_mode = registry.get_agent_metadata(
+        config.effective_agent, "solo_mode", default=False
+    )
+    if solo_mode and task_set_name == "telecom":
+        task_set_name = "telecom_solo"
     tasks = get_tasks(
         task_set_name=task_set_name,
         task_split_name=config.task_split_name,

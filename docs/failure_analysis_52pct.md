@@ -31,7 +31,7 @@
 
 > Agent called a write tool (enable_roaming, refuel_data) on L1001 instead of L1002
 
-### Sim 74: `[mms_issue]airplane_mode_on|bad_wifi_calling|user_abroad_roaming_enabled_off[PERSONA:Easy]`
+### Sim 74 (Task 380): `[mms_issue]airplane_mode_on|bad_wifi_calling|user_abroad_roaming_enabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -41,7 +41,7 @@
 - **Passed actions**: toggle_airplane_mode, toggle_roaming
 - **Total tool calls**: 17
 
-### Sim 103: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Hard]`
+### Sim 103 (Task 2209): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -51,7 +51,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, toggle_wifi_calling, grant_app_permission, toggle_data, reseat_sim_card
 - **Total tool calls**: 23
 
-### Sim 111: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Easy]`
+### Sim 111 (Task 2283): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Easy]`
 
 - **Warning fired**: False
 - **Lines looked up**: none
@@ -65,7 +65,7 @@
 
 > Agent keeps re-looking-up L1001, gets warned, corrects to L1002, then forgets and looks up L1001 again in a loop
 
-### Sim 33: `[mobile_data_issue]bad_network_preference|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]`
+### Sim 33 (Task 227): `[mobile_data_issue]bad_network_preference|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -75,28 +75,28 @@
 - **Passed actions**: set_network_mode_preference, toggle_data, toggle_data_saver_mode, refuel_data, enable_roaming, toggle_roaming
 - **Total tool calls**: 820
 
-### Sim 45: `[mobile_data_issue]airplane_mode_on|bad_network_preference|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:None]`
+### Sim 45 (Task 208): `[mobile_data_issue]airplane_mode_on|bad_network_preference|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
 - **Write actions**: enable_roaming(L1002), refuel_data(L1002)
 - **Total tool calls**: 1148
 
-### Sim 49: `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:Easy]`
+### Sim 49 (Task 235): `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
 - **Write actions**: refuel_data(L1002)
 - **Total tool calls**: 1432
 
-### Sim 57: `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:None]`
+### Sim 57 (Task 252): `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
 - **Write actions**: enable_roaming(L1002), refuel_data(L1002)
 - **Total tool calls**: 1432
 
-### Sim 93: `[mms_issue]bad_network_preference|data_mode_off|user_abroad_roaming_disabled_on[PERSONA:None]`
+### Sim 93 (Task 463): `[mms_issue]bad_network_preference|data_mode_off|user_abroad_roaming_disabled_on[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 x93, L1002 x93 (loop)
@@ -107,7 +107,7 @@
 
 > Agent called refuel_data on correct line but with gb_amount=0.1 instead of 2.0
 
-### Sim 69: `[mms_issue]break_app_storage_permission|data_usage_exceeded[PERSONA:Easy]`
+### Sim 69 (Task 329): `[mms_issue]break_app_storage_permission|data_usage_exceeded[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -119,7 +119,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 18
 
-### Sim 71: `[mms_issue]break_app_both_permissions|data_usage_exceeded[PERSONA:Hard]`
+### Sim 71 (Task 330): `[mms_issue]break_app_both_permissions|data_usage_exceeded[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -130,7 +130,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 22
 
-### Sim 73: `[mms_issue]airplane_mode_on|bad_network_preference|data_usage_exceeded[PERSONA:None]`
+### Sim 73 (Task 373): `[mms_issue]airplane_mode_on|bad_network_preference|data_usage_exceeded[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -141,7 +141,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 17
 
-### Sim 76: `[mms_issue]bad_wifi_calling|data_mode_off|data_usage_exceeded[PERSONA:Easy]`
+### Sim 76 (Task 452): `[mms_issue]bad_wifi_calling|data_mode_off|data_usage_exceeded[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -152,7 +152,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 22
 
-### Sim 82: `[mms_issue]airplane_mode_on|break_app_both_permissions|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:None]`
+### Sim 82 (Task 658): `[mms_issue]airplane_mode_on|break_app_both_permissions|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -163,7 +163,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 25
 
-### Sim 85: `[mms_issue]break_apn_mms_setting|data_mode_off|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:Hard]`
+### Sim 85 (Task 837): `[mms_issue]break_apn_mms_setting|data_mode_off|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -174,7 +174,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 22
 
-### Sim 89: `[mms_issue]bad_network_preference|break_app_sms_permission|data_mode_off|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:None]`
+### Sim 89 (Task 1408): `[mms_issue]bad_network_preference|break_app_sms_permission|data_mode_off|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -185,7 +185,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 21
 
-### Sim 90: `[mms_issue]bad_wifi_calling|break_apn_mms_setting|data_mode_off|data_usage_exceeded|unseat_sim_card[PERSONA:None]`
+### Sim 90 (Task 1274): `[mms_issue]bad_wifi_calling|break_apn_mms_setting|data_mode_off|data_usage_exceeded|unseat_sim_card[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -196,7 +196,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 23
 
-### Sim 95: `[mms_issue]airplane_mode_on|bad_network_preference|break_app_both_permissions|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Hard]`
+### Sim 95 (Task 1619): `[mms_issue]airplane_mode_on|bad_network_preference|break_app_both_permissions|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -207,7 +207,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 1.0}`
 - **Total tool calls**: 21
 
-### Sim 100: `[mms_issue]bad_network_preference|bad_wifi_calling|break_app_both_permissions|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:None]`
+### Sim 100 (Task 1905): `[mms_issue]bad_network_preference|bad_wifi_calling|break_app_both_permissions|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -218,7 +218,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 1.0}`
 - **Total tool calls**: 29
 
-### Sim 101: `[mms_issue]bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:None]`
+### Sim 101 (Task 1953): `[mms_issue]bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -229,7 +229,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 28
 
-### Sim 102: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:None]`
+### Sim 102 (Task 2228): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -240,7 +240,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 17
 
-### Sim 105: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card[PERSONA:Easy]`
+### Sim 105 (Task 2238): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -251,7 +251,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 21
 
-### Sim 106: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:None]`
+### Sim 106 (Task 2279): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -262,7 +262,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 24
 
-### Sim 107: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Easy]`
+### Sim 107 (Task 2280): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -273,7 +273,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 22
 
-### Sim 108: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:None]`
+### Sim 108 (Task 2276): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -285,7 +285,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 30
 
-### Sim 110: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Easy]`
+### Sim 110 (Task 2256): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -296,7 +296,7 @@
 - **Refuel args used**: `{'customer_id': 'C1001', 'line_id': 'L1002', 'gb_amount': 0.1}`
 - **Total tool calls**: 29
 
-### Sim 112: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Hard]`
+### Sim 112 (Task 2281): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -311,7 +311,7 @@
 
 > Agent should have called refuel_data but never did
 
-### Sim 31: `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Hard]`
+### Sim 31 (Task 253): `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -321,7 +321,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, disconnect_vpn, toggle_data, toggle_data_saver_mode, enable_roaming, toggle_roaming
 - **Total tool calls**: 17
 
-### Sim 77: `[mms_issue]break_app_sms_permission|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:None]`
+### Sim 77 (Task 496): `[mms_issue]break_app_sms_permission|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -331,7 +331,7 @@
 - **Passed actions**: enable_roaming
 - **Total tool calls**: 4
 
-### Sim 81: `[mms_issue]airplane_mode_on|bad_network_preference|break_apn_mms_setting|data_usage_exceeded[PERSONA:Hard]`
+### Sim 81 (Task 660): `[mms_issue]airplane_mode_on|bad_network_preference|break_apn_mms_setting|data_usage_exceeded[PERSONA:Hard]`
 
 - **Warning fired**: False
 - **Lines looked up**: none
@@ -340,7 +340,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, reset_apn_settings, reboot_device
 - **Total tool calls**: 16
 
-### Sim 84: `[mms_issue]bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|data_usage_exceeded[PERSONA:Hard]`
+### Sim 84 (Task 948): `[mms_issue]bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|data_usage_exceeded[PERSONA:Hard]`
 
 - **Warning fired**: False
 - **Lines looked up**: none
@@ -349,7 +349,7 @@
 - **Passed actions**: toggle_wifi_calling, reset_apn_settings, reboot_device
 - **Total tool calls**: 13
 
-### Sim 91: `[mms_issue]bad_network_preference|bad_wifi_calling|break_app_both_permissions|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Hard]`
+### Sim 91 (Task 1508): `[mms_issue]bad_network_preference|bad_wifi_calling|break_app_both_permissions|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -359,7 +359,7 @@
 - **Passed actions**: set_network_mode_preference, toggle_wifi_calling, grant_app_permission, enable_roaming, toggle_roaming
 - **Total tool calls**: 23
 
-### Sim 92: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Easy]`
+### Sim 92 (Task 1615): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_on[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -369,7 +369,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, enable_roaming
 - **Total tool calls**: 17
 
-### Sim 97: `[mms_issue]airplane_mode_on|bad_network_preference|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:None]`
+### Sim 97 (Task 2102): `[mms_issue]airplane_mode_on|bad_network_preference|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -378,7 +378,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, reset_apn_settings, reboot_device, grant_app_permission, toggle_data
 - **Total tool calls**: 12
 
-### Sim 98: `[mms_issue]airplane_mode_on|bad_wifi_calling|break_app_both_permissions|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:None]`
+### Sim 98 (Task 1983): `[mms_issue]airplane_mode_on|bad_wifi_calling|break_app_both_permissions|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -387,7 +387,7 @@
 - **Passed actions**: toggle_airplane_mode, toggle_wifi_calling, grant_app_permission, grant_app_permission, toggle_data, reseat_sim_card, toggle_roaming
 - **Total tool calls**: 24
 
-### Sim 104: `[mms_issue]bad_network_preference|bad_wifi_calling|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Easy]`
+### Sim 104 (Task 2148): `[mms_issue]bad_network_preference|bad_wifi_calling|break_app_sms_permission|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -396,7 +396,7 @@
 - **Passed actions**: set_network_mode_preference, toggle_wifi_calling, toggle_data, reseat_sim_card, toggle_roaming
 - **Total tool calls**: 20
 
-### Sim 113: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Hard]`
+### Sim 113 (Task 2284): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|data_mode_off|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -410,7 +410,7 @@
 
 > Agent missed a required user-side troubleshooting action
 
-### Sim 4: `[mobile_data_issue]data_saver_mode_on|user_abroad_roaming_enabled_off[PERSONA:Easy]`
+### Sim 4 (Task 17): `[mobile_data_issue]data_saver_mode_on|user_abroad_roaming_enabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -420,7 +420,7 @@
 - **Passed actions**: toggle_roaming
 - **Total tool calls**: 6
 
-### Sim 10: `[mobile_data_issue]bad_network_preference|bad_vpn|user_abroad_roaming_disabled_on[PERSONA:None]`
+### Sim 10 (Task 83): `[mobile_data_issue]bad_network_preference|bad_vpn|user_abroad_roaming_disabled_on[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -431,7 +431,7 @@
 - **Passed actions**: set_network_mode_preference, enable_roaming
 - **Total tool calls**: 8
 
-### Sim 11: `[mobile_data_issue]bad_network_preference|bad_vpn|user_abroad_roaming_enabled_off[PERSONA:Easy]`
+### Sim 11 (Task 73): `[mobile_data_issue]bad_network_preference|bad_vpn|user_abroad_roaming_enabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -441,7 +441,7 @@
 - **Passed actions**: set_network_mode_preference, toggle_roaming
 - **Total tool calls**: 8
 
-### Sim 12: `[mobile_data_issue]bad_network_preference|bad_vpn|user_abroad_roaming_disabled_off[PERSONA:Hard]`
+### Sim 12 (Task 93): `[mobile_data_issue]bad_network_preference|bad_vpn|user_abroad_roaming_disabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -452,7 +452,7 @@
 - **Passed actions**: set_network_mode_preference, enable_roaming, toggle_roaming
 - **Total tool calls**: 8
 
-### Sim 15: `[mobile_data_issue]airplane_mode_on|bad_network_preference|data_mode_off|data_saver_mode_on[PERSONA:Hard]`
+### Sim 15 (Task 136): `[mobile_data_issue]airplane_mode_on|bad_network_preference|data_mode_off|data_saver_mode_on[PERSONA:Hard]`
 
 - **Warning fired**: False
 - **Lines looked up**: none
@@ -462,7 +462,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, toggle_data
 - **Total tool calls**: 7
 
-### Sim 24: `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_saver_mode_on|user_abroad_roaming_disabled_on[PERSONA:Easy]`
+### Sim 24 (Task 197): `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_saver_mode_on|user_abroad_roaming_disabled_on[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -473,7 +473,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, disconnect_vpn, enable_roaming
 - **Total tool calls**: 9
 
-### Sim 25: `[mobile_data_issue]bad_network_preference|bad_vpn|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]`
+### Sim 25 (Task 230): `[mobile_data_issue]bad_network_preference|bad_vpn|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -484,7 +484,7 @@
 - **Passed actions**: set_network_mode_preference, toggle_data_saver_mode, refuel_data, enable_roaming, toggle_roaming
 - **Total tool calls**: 15
 
-### Sim 27: `[mobile_data_issue]airplane_mode_on|bad_network_preference|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:None]`
+### Sim 27 (Task 238): `[mobile_data_issue]airplane_mode_on|bad_network_preference|data_mode_off|data_saver_mode_on|data_usage_exceeded|user_abroad_roaming_disabled_on[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -495,7 +495,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, toggle_data, refuel_data, enable_roaming
 - **Total tool calls**: 12
 
-### Sim 79: `[mms_issue]bad_network_preference|break_app_sms_permission|user_abroad_roaming_disabled_on[PERSONA:Hard]`
+### Sim 79 (Task 531): `[mms_issue]bad_network_preference|break_app_sms_permission|user_abroad_roaming_disabled_on[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -505,7 +505,7 @@
 - **Passed actions**: set_network_mode_preference, enable_roaming
 - **Total tool calls**: 14
 
-### Sim 83: `[mms_issue]bad_wifi_calling|break_apn_mms_setting|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Easy]`
+### Sim 83 (Task 788): `[mms_issue]bad_wifi_calling|break_apn_mms_setting|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -514,7 +514,7 @@
 - **Passed actions**: reset_apn_settings, reboot_device, reseat_sim_card, toggle_roaming
 - **Total tool calls**: 17
 
-### Sim 87: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_app_storage_permission|unseat_sim_card[PERSONA:Hard]`
+### Sim 87 (Task 1088): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_app_storage_permission|unseat_sim_card[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -523,7 +523,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, grant_app_permission, reseat_sim_card
 - **Total tool calls**: 20
 
-### Sim 99: `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Hard]`
+### Sim 99 (Task 2089): `[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_both_permissions|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -532,7 +532,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, reset_apn_settings, reboot_device, grant_app_permission, reseat_sim_card, toggle_roaming
 - **Total tool calls**: 19
 
-### Sim 109: `[mms_issue]bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card[PERSONA:Easy]`
+### Sim 109 (Task 2178): `[mms_issue]bad_network_preference|bad_wifi_calling|break_apn_mms_setting|break_app_storage_permission|data_mode_off|data_usage_exceeded|unseat_sim_card[PERSONA:Easy]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -547,7 +547,7 @@
 
 > Agent missed a required user action (toggle_roaming, reseat_sim, etc.)
 
-### Sim 44: `[service_issue]airplane_mode_on|break_apn_settings|unseat_sim_card[PERSONA:None]`
+### Sim 44 (Task 275): `[service_issue]airplane_mode_on|break_apn_settings|unseat_sim_card[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -557,7 +557,7 @@
 - **Passed actions**: toggle_airplane_mode, reseat_sim_card
 - **Total tool calls**: 12
 
-### Sim 70: `[mms_issue]bad_network_preference|user_abroad_roaming_disabled_off[PERSONA:None]`
+### Sim 70 (Task 343): `[mms_issue]bad_network_preference|user_abroad_roaming_disabled_off[PERSONA:None]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -571,7 +571,7 @@
 
 > Agent should have transferred to human agent but did not
 
-### Sim 61: `[service_issue]airplane_mode_on|break_apn_settings|lock_sim_card_pin|overdue_bill_suspension|unseat_sim_card[PERSONA:None]`
+### Sim 61 (Task 299): `[service_issue]airplane_mode_on|break_apn_settings|lock_sim_card_pin|overdue_bill_suspension|unseat_sim_card[PERSONA:None]`
 
 - **Warning fired**: False
 - **Lines looked up**: L1002
@@ -584,7 +584,7 @@
 
 > Task failed for other reasons (env state not resolved despite correct actions)
 
-### Sim 29: `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_saver_mode_on|user_abroad_roaming_disabled_off[PERSONA:Hard]`
+### Sim 29 (Task 242): `[mobile_data_issue]airplane_mode_on|bad_network_preference|bad_vpn|data_mode_off|data_saver_mode_on|user_abroad_roaming_disabled_off[PERSONA:Hard]`
 
 - **Warning fired**: True
 - **Lines looked up**: L1001 → L1002
@@ -593,7 +593,7 @@
 - **Passed actions**: toggle_airplane_mode, set_network_mode_preference, disconnect_vpn, toggle_data, toggle_data_saver_mode, enable_roaming, toggle_roaming
 - **Total tool calls**: 27
 
-### Sim 64: `[service_issue]airplane_mode_on|break_apn_settings|overdue_bill_suspension|unseat_sim_card[PERSONA:None]`
+### Sim 64 (Task 293): `[service_issue]airplane_mode_on|break_apn_settings|overdue_bill_suspension|unseat_sim_card[PERSONA:None]`
 
 - **Warning fired**: False
 - **Lines looked up**: none
