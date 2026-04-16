@@ -359,8 +359,14 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                         self.tool_call_verifier.record_tool_call(tool_call.name, tool_call.arguments)
                     elif tool_call.requestor == "user" and hasattr(self.tool_call_verifier, 'record_user_tool_call'):
                         self.tool_call_verifier.record_user_tool_call(tool_call.name)
-                    # --- Post-execution result check (e.g. wrong-line warning) ---
-                    if tool_call.requestor == "assistant" and hasattr(self.tool_call_verifier, 'check_result'):
+                    # --- Post-execution result check (e.g. wrong-line warning, speed/MMS hints) ---
+                    # Run on both assistant and user tools — check_result is non-blocking.
+                    # IMPORTANT: We must NOT modify tool_result.content for mutating
+                    # (state-changing) tools, because the evaluator replays them and
+                    # does a strict content comparison. Appending warnings would cause
+                    # a mismatch → infrastructure_error. Only inline warnings for
+                    # non-mutating (read-only) tools.
+                    if hasattr(self.tool_call_verifier, 'check_result'):
                         result_warning = self.tool_call_verifier.check_result(
                             tool_name=tool_call.name,
                             tool_args=tool_call.arguments,
@@ -368,13 +374,19 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                         )
                         if result_warning:
                             logger.info("Post-exec warning for %s: %s", tool_call.name, result_warning)
-                            tool_result = ToolMessage(
-                                id=tool_result.id,
-                                content=tool_result.content + "\n\n" + result_warning,
-                                role=tool_result.role,
-                                error=tool_result.error,
-                                requestor=tool_result.requestor,
-                            )
+                            if not self.environment._is_mutating_tool(tool_call.name):
+                                tool_result = ToolMessage(
+                                    id=tool_result.id,
+                                    content=tool_result.content + "\n\n" + result_warning,
+                                    role=tool_result.role,
+                                    error=tool_result.error,
+                                    requestor=tool_result.requestor,
+                                )
+                            else:
+                                logger.info(
+                                    "Skipping inline warning for mutating tool %s "
+                                    "(would break eval replay)", tool_call.name
+                                )
             tool_results.append(tool_result)
         return tool_results
 

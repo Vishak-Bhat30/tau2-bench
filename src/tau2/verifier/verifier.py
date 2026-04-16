@@ -159,6 +159,9 @@ class PolicyVerifier:
         # User's phone number (captured from get_customer_by_phone calls)
         self._user_phone: str | None = None
 
+        # Track last result for specific diagnostic tools (for post-exec feedback)
+        self._last_tool_results: dict[str, str] = {}
+
         # Domain-specific tool sets
         self._write_tools = WRITE_TOOLS_BY_DOMAIN.get(domain, set())
         self._read_tools = READ_TOOLS_BY_DOMAIN.get(domain, set())
@@ -423,13 +426,47 @@ class PolicyVerifier:
         Returns a warning string to append to the result, or None.
         """
         if self.domain == "telecom":
-            from tau2.verifier.telecom_policy_spec import check_result_line_phone
-            return check_result_line_phone(
+            from tau2.verifier.telecom_policy_spec import (
+                check_result_line_phone,
+                check_result_speed_test,
+                check_result_can_send_mms,
+            )
+            # Track results from diagnostic tools for cross-referencing
+            _TRACKED_TOOLS = {
+                "check_app_permissions", "check_network_status",
+                "check_wifi_calling_status", "check_apn_settings",
+                "check_data_restriction_status", "check_vpn_status",
+                "check_network_mode_preference",
+            }
+            if tool_name in _TRACKED_TOOLS:
+                self._last_tool_results[tool_name] = result_content
+
+            warnings = []
+            w1 = check_result_line_phone(
                 tool_name=tool_name,
                 tool_args=tool_args,
                 result_content=result_content,
                 user_phone=self._user_phone,
             )
+            if w1:
+                warnings.append(w1)
+            w2 = check_result_speed_test(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+            )
+            if w2:
+                warnings.append(w2)
+            w3 = check_result_can_send_mms(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+                last_tool_results=self._last_tool_results,
+                called_tools=self._called_all_tools,
+            )
+            if w3:
+                warnings.append(w3)
+            return "\n".join(warnings) if warnings else None
         return None
 
     def check_completion(self, conversation: list[dict]) -> str | None:
@@ -1210,6 +1247,7 @@ class PolicyVerifier:
         self._block_counts.clear()
         self._called_write_tools.clear()
         self._called_all_tools.clear()
+        self._last_tool_results.clear()
         self._expected_tools.clear()
         self._called_user_tools.clear()
         self._expected_user_tools.clear()

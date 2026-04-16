@@ -322,13 +322,21 @@ def _infer_issue_type(conversation: list[dict], **kwargs) -> str | None:
 # If a diagnostic reveals a problem, the agent should fix it.
 _REQUIRED_TOOLS: dict[str, dict[str, str]] = {
     "data": {
+        "check_network_status": (
+            "Check if mobile data is enabled — if disabled, turn it on "
+            "with toggle_data()"
+        ),
         "check_data_restriction_status": (
             "Check if Data Saver mode is on — if so, toggle it off "
             "with toggle_data_saver_mode"
         ),
         "check_network_mode_preference": (
-            "Check the network mode preference — if it's wrong, fix it "
-            "with set_network_mode_preference"
+            "Check the network mode preference — if set to 2G/3G, fix it "
+            "with set_network_mode_preference('4g_5g_preferred')"
+        ),
+        "check_vpn_status": (
+            "Check if a VPN is active and causing slow speeds — if VPN "
+            "performance is Poor, disconnect with disconnect_vpn()"
         ),
         "get_data_usage": (
             "Check if user's data usage has exceeded their limit — "
@@ -336,6 +344,10 @@ _REQUIRED_TOOLS: dict[str, dict[str, str]] = {
         ),
     },
     "mms": {
+        "check_network_status": (
+            "Check network status — MMS requires mobile data to be ON "
+            "and cellular service available"
+        ),
         "check_app_permissions": (
             "Check messaging app permissions — if sms or storage is "
             "missing, grant it with grant_app_permission('messaging', ...)"
@@ -798,3 +810,163 @@ def check_result_line_phone(
         f"This is likely NOT the correct line for the user's issue. "
         f"Look up the line whose phone number matches {user_phone} instead."
     )
+
+
+def check_result_speed_test(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+) -> str | None:
+    """After run_speed_test, warn the agent if speed is below 'Excellent'.
+
+    Per policy: 'Any speed below Excellent is considered slow.'
+    The agent must continue troubleshooting (Path 2.2): check Data Saver,
+    network mode preference, and VPN before declaring the issue resolved.
+    """
+    if tool_name != "run_speed_test":
+        return None
+
+    result_lower = result_content.lower()
+
+    # If speed is already excellent, no warning needed
+    if "excellent" in result_lower:
+        return None
+
+    # If no connection, different problem — don't warn about speed
+    if "no connection" in result_lower:
+        return None
+
+    return (
+        "⚠️ WARNING: Speed is below 'Excellent'. Per policy, any speed below "
+        "'Excellent' is considered slow. You MUST continue troubleshooting "
+        "(Path 2.2):\n"
+        "  1. Check Data Saver: call check_data_restriction_status() — "
+        "if Data Saver is ON, call toggle_data_saver_mode() to turn it OFF\n"
+        "  2. Check network mode: call check_network_mode_preference() — "
+        "if set to 2G/3G, call set_network_mode_preference('4g_5g_preferred')\n"
+        "  3. Check VPN: call check_vpn_status() — "
+        "if VPN is active, call disconnect_vpn()\n"
+        "Re-run the speed test after each fix to check if speed improved to 'Excellent'."
+    )
+
+
+def check_result_can_send_mms(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+    last_tool_results: dict[str, str],
+    called_tools: list[str],
+) -> str | None:
+    """After can_send_mms returns failure, analyze what the agent has checked
+    so far and provide targeted feedback on what to fix.
+
+    MMS requires ALL of:
+      1. Mobile data working (data on + connected)
+      2. Network >= 3G
+      3. Wi-Fi calling OFF (carrier doesn't support MMS over Wi-Fi)
+      4. MMSC URL configured in APN settings
+      5. Messaging app has both 'sms' AND 'storage' permissions
+    """
+    if tool_name != "can_send_mms":
+        return None
+
+    # Only trigger on failure
+    if "cannot" not in result_content.lower():
+        return None
+
+    hints = []
+
+    # --- Check 1: App permissions ---
+    perm_result = last_tool_results.get("check_app_permissions", "")
+    if perm_result:
+        perm_lower = perm_result.lower()
+        missing_perms = []
+        if "sms" not in perm_lower:
+            missing_perms.append("sms")
+        if "storage" not in perm_lower:
+            missing_perms.append("storage")
+        if missing_perms:
+            hints.append(
+                f"MISSING PERMISSIONS: The messaging app is missing "
+                f"{', '.join(missing_perms)} permission(s). "
+                f"Call grant_app_permission('messaging', '{missing_perms[0]}') to fix."
+            )
+    elif "check_app_permissions" not in called_tools:
+        hints.append(
+            "NOT CHECKED: You have not checked messaging app permissions yet. "
+            "Call check_app_permissions('messaging') — MMS requires both 'sms' "
+            "and 'storage' permissions."
+        )
+
+    # --- Check 2: Wi-Fi calling ---
+    wifi_result = last_tool_results.get("check_wifi_calling_status", "")
+    if wifi_result:
+        if "on" in wifi_result.lower() and "off" not in wifi_result.lower():
+            hints.append(
+                "WI-FI CALLING IS ON: Wi-Fi Calling can interfere with MMS. "
+                "Call toggle_wifi_calling() to turn it off."
+            )
+    elif "check_wifi_calling_status" not in called_tools:
+        hints.append(
+            "NOT CHECKED: You have not checked Wi-Fi calling status. "
+            "Call check_wifi_calling_status() — if it's ON, it can block MMS."
+        )
+
+    # --- Check 3: APN/MMSC settings ---
+    apn_result = last_tool_results.get("check_apn_settings", "")
+    if apn_result:
+        if "none" in apn_result.lower() and "mmsc" in apn_result.lower():
+            hints.append(
+                "MMSC URL MISSING: APN settings show no MMSC URL configured. "
+                "Call reset_apn_settings() then reboot_device() to fix."
+            )
+    elif "check_apn_settings" not in called_tools:
+        hints.append(
+            "NOT CHECKED: You have not checked APN settings. "
+            "Call check_apn_settings() — MMS requires a valid MMSC URL."
+        )
+
+    # --- Check 4: Network status / mobile data ---
+    net_result = last_tool_results.get("check_network_status", "")
+    if net_result:
+        net_lower = net_result.lower()
+        if "mobile data enabled: no" in net_lower:
+            hints.append(
+                "MOBILE DATA OFF: Mobile data is disabled. "
+                "Call toggle_data() to enable it — MMS requires mobile data."
+            )
+    elif "check_network_status" not in called_tools:
+        hints.append(
+            "NOT CHECKED: You have not checked network status. "
+            "Call check_network_status() — MMS requires mobile data to be ON."
+        )
+
+    # --- Check 5: Network mode (must be >= 3G for MMS) ---
+    mode_result = last_tool_results.get("check_network_mode_preference", "")
+    if mode_result:
+        mode_lower = mode_result.lower()
+        if "2g" in mode_lower and "3g" not in mode_lower and "4g" not in mode_lower and "5g" not in mode_lower:
+            hints.append(
+                "NETWORK MODE 2G: MMS requires at least 3G. "
+                "Call set_network_mode_preference('4g_5g_preferred') to upgrade."
+            )
+    elif "check_network_mode_preference" not in called_tools:
+        hints.append(
+            "NOT CHECKED: You have not checked network mode preference. "
+            "Call check_network_mode_preference() — MMS requires at least 3G."
+        )
+
+    if not hints:
+        return None
+
+    return (
+        "⚠️ MMS CANNOT BE SENT. Based on your previous checks, here are "
+        "the issues to fix:\n  " + "\n  ".join(hints)
+    )
+
+
+# NOTE: check_result_reset_apn and check_result_resume_line were removed.
+# Both target mutating (WRITE) tools. The evaluator replays mutating tool
+# calls with strict content comparison, so appending warnings to their
+# results causes infrastructure_error (content mismatch). Only non-mutating
+# (READ) tools can safely have warnings inlined into their results.
