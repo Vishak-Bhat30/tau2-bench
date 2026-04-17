@@ -430,13 +430,16 @@ class PolicyVerifier:
                 check_result_line_phone,
                 check_result_speed_test,
                 check_result_can_send_mms,
+                check_result_get_data_usage,
+                check_result_check_network_status,
+                check_result_line_suspended,
             )
             # Track results from diagnostic tools for cross-referencing
             _TRACKED_TOOLS = {
                 "check_app_permissions", "check_network_status",
                 "check_wifi_calling_status", "check_apn_settings",
                 "check_data_restriction_status", "check_vpn_status",
-                "check_network_mode_preference",
+                "check_network_mode_preference", "get_data_usage",
             }
             if tool_name in _TRACKED_TOOLS:
                 self._last_tool_results[tool_name] = result_content
@@ -466,6 +469,29 @@ class PolicyVerifier:
             )
             if w3:
                 warnings.append(w3)
+            w4 = check_result_get_data_usage(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+            )
+            if w4:
+                warnings.append(w4)
+            w5 = check_result_check_network_status(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+                called_tools=self._called_all_tools,
+            )
+            if w5:
+                warnings.append(w5)
+            w6 = check_result_line_suspended(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+                called_tools=self._called_all_tools,
+            )
+            if w6:
+                warnings.append(w6)
             return "\n".join(warnings) if warnings else None
         return None
 

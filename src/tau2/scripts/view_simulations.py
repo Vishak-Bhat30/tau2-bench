@@ -101,6 +101,7 @@ def display_simulation_list(
     table.add_column("Trial", width=5, justify="center")
     table.add_column("Reward", width=6, justify="center")
     table.add_column("DB", width=2, justify="center")
+    table.add_column("ENV", width=7, justify="center")
     table.add_column("Read Acts", width=9, justify="center")
     table.add_column("Write Acts", width=10, justify="center")
     table.add_column("Auth", width=4, justify="center")
@@ -143,6 +144,18 @@ def display_simulation_list(
             db_str = "[green]✓[/]" if sim.reward_info.db_check.db_match else "[red]✗[/]"
         else:
             db_str = "[dim]-[/]"
+
+        # ENV assertions
+        env_str = "[dim]-[/]"
+        if sim.reward_info and sim.reward_info.env_assertions:
+            env_met = sum(1 for ea in sim.reward_info.env_assertions if ea.met)
+            env_count = len(sim.reward_info.env_assertions)
+            if env_met == env_count:
+                env_str = f"[green]{env_met}/{env_count}[/]"
+            elif env_met > 0:
+                env_str = f"[yellow]{env_met}/{env_count}[/]"
+            else:
+                env_str = f"[red]{env_met}/{env_count}[/]"
 
         # Read/Write actions
         read_str = "[dim]-[/]"
@@ -319,6 +332,7 @@ def display_simulation_list(
             str(sim.trial),
             pass_str,
             db_str,
+            env_str,
             read_str,
             write_str,
             auth_str,

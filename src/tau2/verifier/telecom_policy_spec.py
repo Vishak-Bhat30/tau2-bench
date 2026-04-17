@@ -956,12 +956,163 @@ def check_result_can_send_mms(
             "Call check_network_mode_preference() — MMS requires at least 3G."
         )
 
+    # --- Check 6: Data exhaustion (blocks MMS even if everything else is fine) ---
+    data_result = last_tool_results.get("get_data_usage", "")
+    if data_result:
+        import json as _json
+        try:
+            data_info = _json.loads(data_result)
+            used = float(data_info.get("data_used_gb", 0))
+            limit = float(data_info.get("data_limit_gb", 999))
+            refueled = float(data_info.get("data_refueling_gb", 0))
+            if used >= limit + refueled:
+                hints.append(
+                    "DATA EXHAUSTED: Data usage ({:.1f} GB) exceeds limit "
+                    "({:.1f} GB + {:.1f} GB refueled). MMS requires data. "
+                    "Call refuel_data(customer_id, line_id, gb_amount=2.0) to restore.".format(
+                        used, limit, refueled
+                    )
+                )
+        except (ValueError, TypeError, _json.JSONDecodeError):
+            pass
+    elif "get_data_usage" not in called_tools:
+        hints.append(
+            "NOT CHECKED: You have not checked data usage. "
+            "Call get_data_usage(customer_id, line_id) — if data is exhausted, "
+            "MMS will fail even if all other settings are correct."
+        )
+
+    # --- Check 7: Device-level roaming (user abroad needs toggle_roaming) ---
+    net_result_roam = last_tool_results.get("check_network_status", "")
+    if net_result_roam and "data roaming enabled: no" in net_result_roam.lower():
+        hints.append(
+            "DEVICE ROAMING OFF: Data Roaming is disabled on the device. "
+            "If the user is abroad, call enable_roaming(customer_id, line_id) "
+            "AND toggle_roaming() to enable roaming on both account and device."
+        )
+
     if not hints:
         return None
 
     return (
         "⚠️ MMS CANNOT BE SENT. Based on your previous checks, here are "
         "the issues to fix:\n  " + "\n  ".join(hints)
+    )
+
+
+def check_result_get_data_usage(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+) -> str | None:
+    """After get_data_usage, warn if data usage exceeds the plan limit.
+
+    When data_used_gb >= data_limit_gb, the user's data is exhausted and
+    connectivity is lost. The agent must refuel data to restore service.
+    """
+    if tool_name != "get_data_usage":
+        return None
+
+    import json
+    try:
+        data = json.loads(result_content)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    try:
+        used = float(data.get("data_used_gb", 0))
+        limit = float(data.get("data_limit_gb", 999))
+        refueled = float(data.get("data_refueling_gb", 0))
+    except (ValueError, TypeError):
+        return None
+
+    # If usage exceeds limit (even with refueling counted), data is exhausted
+    if used >= limit + refueled:
+        return (
+            "⚠️ WARNING: Data usage ({:.1f} GB) has EXCEEDED the plan limit "
+            "({:.1f} GB + {:.1f} GB refueled = {:.1f} GB available). "
+            "The user's data connectivity is LOST. You MUST call "
+            "refuel_data(customer_id, line_id, gb_amount=2.0) to restore "
+            "data service. Maximum refuel is 2 GB per call.".format(
+                used, limit, refueled, limit + refueled
+            )
+        )
+
+    return None
+
+
+def check_result_check_network_status(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+    called_tools: list[str],
+) -> str | None:
+    """After check_network_status, warn about device-level roaming if disabled.
+
+    When the user is abroad and 'Data Roaming Enabled: No' appears, the agent
+    must call toggle_roaming() on the device AND enable_roaming() on the account.
+    """
+    if tool_name != "check_network_status":
+        return None
+
+    result_lower = result_content.lower()
+
+    hints = []
+
+    # Check for device-level roaming disabled
+    if "data roaming enabled: no" in result_lower:
+        hints.append(
+            "DATA ROAMING DISABLED ON DEVICE: The device has Data Roaming "
+            "turned OFF. If the user is abroad/traveling, you MUST:\n"
+            "    1. Call enable_roaming(customer_id, line_id) to enable roaming on the account\n"
+            "    2. Call toggle_roaming() to enable roaming on the DEVICE\n"
+            "  Both steps are required — account-level and device-level are separate controls."
+        )
+
+    if not hints:
+        return None
+
+    return "⚠️ WARNING:\n  " + "\n  ".join(hints)
+
+
+def check_result_line_suspended(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+    called_tools: list[str],
+) -> str | None:
+    """After get_details_by_id returns a line with 'Suspended' status,
+    remind the agent of the full service restoration workflow.
+
+    After resuming a suspended line, the agent MUST also troubleshoot the
+    device (check_network_status, check_sim_status, reboot_device, etc.)
+    because physical/device issues may co-exist with the suspension.
+    """
+    if tool_name != "get_details_by_id":
+        return None
+
+    # Only applies to line lookups
+    lookup_id = tool_args.get("id", "")
+    if not lookup_id.upper().startswith("L"):
+        return None
+
+    import json
+    try:
+        data = json.loads(result_content)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    status = data.get("status", "")
+    if status != "Suspended":
+        return None
+
+    return (
+        "⚠️ WARNING: This line is SUSPENDED. To fully restore service you must:\n"
+        "  1. Check for overdue bills → pay them → resume_line\n"
+        "  2. AFTER resuming, the user must reboot their device (call reboot_device)\n"
+        "  3. Then do FULL device troubleshooting: check_network_status, check_sim_status,\n"
+        "     toggle_airplane_mode (if ON), reseat_sim_card (if SIM issues), reset_apn_settings + reboot\n"
+        "  Do NOT stop after resume_line — the device may still have issues that need fixing."
     )
 
 
