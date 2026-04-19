@@ -749,7 +749,7 @@ class PolicyVerifier:
         # Safety valve: if we've blocked the same tool name too many times
         # (regardless of args), let it through. Prevents infinite loops when
         # the agent retries with different arguments each time.
-        max_per_tool_name = self.max_feedback_per_tool * 3  # e.g. 9 total blocks
+        max_per_tool_name = self.max_feedback_per_tool + 2  # e.g. 5 total blocks
         if self._tool_block_counts.get(tool_name, 0) >= max_per_tool_name:
             logger.warning(
                 "Safety valve (per-tool): allowing %s after %d total blocks",

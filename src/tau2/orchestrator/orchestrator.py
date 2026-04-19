@@ -984,9 +984,18 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                     if (hasattr(self.tool_call_verifier, 'set_user_instructions')
                             and hasattr(self, 'task') and self.task
                             and hasattr(self.task, 'user_scenario') and self.task.user_scenario):
-                        self.tool_call_verifier.set_user_instructions(
-                            str(self.task.user_scenario)
-                        )
+                        scenario = self.task.user_scenario
+                        # Extract reason_for_call if available (avoids picking up
+                        # MMS/other keywords from simulator meta-instructions).
+                        if isinstance(scenario, dict):
+                            instr = scenario.get('instructions', scenario)
+                            if isinstance(instr, dict):
+                                reason = instr.get('reason_for_call', '')
+                                self.tool_call_verifier.set_user_instructions(reason)
+                            else:
+                                self.tool_call_verifier.set_user_instructions(str(instr))
+                        else:
+                            self.tool_call_verifier.set_user_instructions(str(scenario))
                     conversation = self._build_conversation_for_verifier()
                     self.tool_call_verifier.classify_task(conversation)
         # USER/ENV -> AGENT
