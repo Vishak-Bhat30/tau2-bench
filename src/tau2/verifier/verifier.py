@@ -129,6 +129,12 @@ class PolicyVerifier:
         # Key = (tool_name, frozenset of arg items) so same call+args bypasses after N blocks
         self._block_counts: dict[tuple, int] = {}
 
+        # Track how many times we've blocked each tool name (regardless of args)
+        self._tool_block_counts: dict[str, int] = {}
+
+        # Track how many times we've blocked each tool name (regardless of args)
+        self._tool_block_counts: dict[str, int] = {}
+
         # Track which write tools have been successfully called
         self._called_write_tools: list[str] = []
 
@@ -411,6 +417,9 @@ class PolicyVerifier:
 
     def record_user_tool_call(self, tool_name: str) -> None:
         """Record a user-side tool call (for telecom completion tracking)."""
+        # Track ALL user tool calls (reads + writes) so the verifier knows
+        # diagnostic checks were performed (e.g. check_network_status).
+        self._called_all_tools.append(tool_name)
         if tool_name in USER_WRITE_TOOLS_TELECOM:
             self._called_user_tools.append(tool_name)
             logger.info("Recorded user tool call: %s (total: %d)", tool_name, len(self._called_user_tools))
@@ -737,6 +746,18 @@ class PolicyVerifier:
             )
             return None
 
+        # Safety valve: if we've blocked the same tool name too many times
+        # (regardless of args), let it through. Prevents infinite loops when
+        # the agent retries with different arguments each time.
+        max_per_tool_name = self.max_feedback_per_tool * 3  # e.g. 9 total blocks
+        if self._tool_block_counts.get(tool_name, 0) >= max_per_tool_name:
+            logger.warning(
+                "Safety valve (per-tool): allowing %s after %d total blocks",
+                tool_name,
+                self._tool_block_counts[tool_name],
+            )
+            return None
+
         # Read tools: run read-specific rules (if available)
         if tool_name in self._read_tools:
             if self._check_read and not self.cheap_only:
@@ -763,6 +784,7 @@ class PolicyVerifier:
 
         if violation:
             self._block_counts[_args_key] = self._block_counts.get(_args_key, 0) + 1
+            self._tool_block_counts[tool_name] = self._tool_block_counts.get(tool_name, 0) + 1
             hint = self._get_corrective_hint(tool_name, tool_args)
             return f"[VERIFIER] {violation}" + (f"\n[HINT] {hint}" if hint else "")
 
@@ -772,6 +794,7 @@ class PolicyVerifier:
             item_violation = self._check_item_args(tool_name, tool_args, conversation)
             if item_violation:
                 self._block_counts[_args_key] = self._block_counts.get(_args_key, 0) + 1
+                self._tool_block_counts[tool_name] = self._tool_block_counts.get(tool_name, 0) + 1
                 return f"[VERIFIER] {item_violation}"
 
         # General argument validation using SLM + user scenario (retail only)
@@ -780,6 +803,7 @@ class PolicyVerifier:
             arg_violation = self._check_tool_args(tool_name, tool_args, conversation)
             if arg_violation:
                 self._block_counts[_args_key] = self._block_counts.get(_args_key, 0) + 1
+                self._tool_block_counts[tool_name] = self._tool_block_counts.get(tool_name, 0) + 1
                 hint = self._get_corrective_hint(tool_name, tool_args)
                 return f"[VERIFIER] {arg_violation}" + (f"\n[HINT] {hint}" if hint else "")
 
@@ -1271,6 +1295,7 @@ class PolicyVerifier:
     def reset(self):
         """Reset all state (call between tasks)."""
         self._block_counts.clear()
+        self._tool_block_counts.clear()
         self._called_write_tools.clear()
         self._called_all_tools.clear()
         self._last_tool_results.clear()

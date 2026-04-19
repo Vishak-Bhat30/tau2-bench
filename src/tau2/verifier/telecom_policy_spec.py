@@ -263,16 +263,34 @@ def rule_disable_roaming_not_while_traveling(tool_name, tool_args, conversation,
 #  Policy: "You should try your best to resolve the issue before escalating."
 # ============================================================================
 
-def _extract_tools_called(conversation: list[dict]) -> set[str]:
-    """Extract all tool names already called from conversation history."""
+def _extract_tools_called(conversation: list[dict], **kwargs) -> set[str]:
+    """Extract all tool names already called from conversation history.
+
+    Uses the verifier's internal tracking (most reliable) plus
+    parsing conversation text for ``[Tool call: <name>(...)]`` entries
+    produced by ``_build_conversation_for_verifier()``.
+    """
     tools = set()
+
+    # 1. Use verifier's tracked tool calls (both agent and user side)
+    verifier = kwargs.get("verifier")
+    if verifier:
+        tools.update(getattr(verifier, "_called_all_tools", []))
+        tools.update(getattr(verifier, "_called_user_tools", []))
+
+    # 2. Parse structured tool_calls (solo mode / raw messages)
+    import re
     for msg in conversation:
-        # Solo mode: tool calls are in assistant messages
         if msg.get("role") == "assistant":
             for tc in (msg.get("tool_calls") or []):
                 name = tc.get("name", tc.get("function", {}).get("name", ""))
                 if name:
                     tools.add(name)
+            # 3. Parse text-format tool calls: [Tool call: <name>(...)]
+            content = msg.get("content", "")
+            if content:
+                for m in re.finditer(r"\[Tool call:\s*(\w+)\(", content):
+                    tools.add(m.group(1))
     return tools
 
 
@@ -390,7 +408,7 @@ def rule_transfer_missing_tools(tool_name, tool_args, conversation, db, **kwargs
     if tool_name != "transfer_to_human_agents":
         return None
 
-    tools_called = _extract_tools_called(conversation)
+    tools_called = _extract_tools_called(conversation, **kwargs)
     issue_type = _infer_issue_type(conversation, **kwargs)
 
     if not issue_type:
