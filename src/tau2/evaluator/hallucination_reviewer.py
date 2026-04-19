@@ -11,7 +11,7 @@ Only full-duplex (tick-based) mode is supported for now.
 
 import json
 
-from tau2.config import DEFAULT_LLM_EVAL_USER_SIMULATOR
+from tau2.config import DEFAULT_LLM_EVAL_USER_SIMULATOR, DEFAULT_LLM_EVAL_USER_SIMULATOR_ARGS
 from tau2.data_model.message import SystemMessage, Tick, UserMessage
 from tau2.data_model.simulation import HallucinationCheck, HallucinationCheckError
 from tau2.data_model.tasks import Task
@@ -197,6 +197,7 @@ class FullDuplexHallucinationReviewer:
             model=DEFAULT_LLM_EVAL_USER_SIMULATOR,
             messages=messages,
             call_name="llm_judge_hallucination_check",
+            **DEFAULT_LLM_EVAL_USER_SIMULATOR_ARGS,
         )
 
         try:
