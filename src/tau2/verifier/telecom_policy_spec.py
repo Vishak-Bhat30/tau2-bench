@@ -341,8 +341,9 @@ def _infer_issue_type(conversation: list[dict], **kwargs) -> str | None:
 _REQUIRED_TOOLS: dict[str, dict[str, str]] = {
     "data": {
         "check_network_status": (
-            "Check if mobile data is enabled — if disabled, turn it on "
-            "with toggle_data()"
+            "Check if mobile data is enabled and roaming status — if disabled, "
+            "turn it on with toggle_data(); if roaming is off and user is abroad, "
+            "call enable_roaming() + toggle_roaming()"
         ),
         "check_data_restriction_status": (
             "Check if Data Saver mode is on — if so, toggle it off "
@@ -358,7 +359,7 @@ _REQUIRED_TOOLS: dict[str, dict[str, str]] = {
         ),
         "get_data_usage": (
             "Check if user's data usage has exceeded their limit — "
-            "if so, refuel with refuel_data"
+            "if so, refuel with refuel_data(customer_id, line_id, gb_amount=2.0)"
         ),
     },
     "mms": {
@@ -725,11 +726,13 @@ SLM_RULES = [r for r in ALL_RULES if r not in CHEAP_RULES]
 # Argument-accuracy rules: these only need the ticket/instructions context,
 # not the full conversation. Passing a shorter context to the SLM yields
 # more reliable extraction and is cheaper.
+# NOTE: rule_arg_refuel_line and rule_arg_enable_roaming_line are NOT here
+# because for telecom data tasks the user never explicitly mentions their
+# phone number — the agent discovers it via get_customer_by_phone lookups.
+# These rules need the full conversation to see the looked-up line/phone.
 ARG_RULES = {
-    rule_arg_refuel_line,
     rule_arg_payment_bill,
     rule_arg_resume_line,
-    rule_arg_enable_roaming_line,
 }
 
 # Rules that need access to the verifier / kwargs (e.g., user_instructions).
@@ -1087,6 +1090,18 @@ def check_result_check_network_status(
             "  Both steps are required — account-level and device-level are separate controls."
         )
 
+    # Check for mobile data disabled
+    if "mobile data enabled: no" in result_lower:
+        hints.append(
+            "MOBILE DATA IS OFF: Call toggle_data() to turn mobile data ON."
+        )
+
+    # Check for airplane mode
+    if "airplane mode: on" in result_lower:
+        hints.append(
+            "AIRPLANE MODE IS ON: Call toggle_airplane_mode() to turn it OFF first."
+        )
+
     if not hints:
         return None
 
@@ -1132,6 +1147,49 @@ def check_result_line_suspended(
         "     toggle_airplane_mode (if ON), reseat_sim_card (if SIM issues), reset_apn_settings + reboot\n"
         "  Do NOT stop after resume_line — the device may still have issues that need fixing."
     )
+
+
+def check_result_get_line_details_data(
+    tool_name: str,
+    tool_args: dict,
+    result_content: str,
+) -> str | None:
+    """After get_details_by_id returns a line, check if data is exceeded.
+
+    Many agents call get_details_by_id (line) instead of get_data_usage,
+    so we check data_used_gb vs the plan limit here too.
+    """
+    if tool_name != "get_details_by_id":
+        return None
+
+    lookup_id = tool_args.get("id", "")
+    if not lookup_id.upper().startswith("L"):
+        return None
+
+    import json
+    try:
+        data = json.loads(result_content)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    try:
+        used = float(data.get("data_used_gb", 0))
+        refueled = float(data.get("data_refueling_gb", 0))
+    except (ValueError, TypeError):
+        return None
+
+    # We don't have plan limit in line details, but if usage is high
+    # and refueling is 0, hint to check data_usage or refuel.
+    # Common plans are 5-15 GB, so if used > 10 and no refueling, warn.
+    if used > 5.0 and refueled == 0.0:
+        return (
+            "⚠️ NOTE: This line shows {:.1f} GB data used with 0 GB refueled. "
+            "If the user is experiencing data issues, call get_data_usage(customer_id, line_id) "
+            "to check if the data limit is exceeded. If exceeded, you MUST call "
+            "refuel_data(customer_id, line_id, gb_amount=2.0) to restore data.".format(used)
+        )
+
+    return None
 
 
 # NOTE: check_result_reset_apn and check_result_resume_line were removed.

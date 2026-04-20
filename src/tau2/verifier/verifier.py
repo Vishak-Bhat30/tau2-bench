@@ -442,6 +442,7 @@ class PolicyVerifier:
                 check_result_get_data_usage,
                 check_result_check_network_status,
                 check_result_line_suspended,
+                check_result_get_line_details_data,
             )
             # Track results from diagnostic tools for cross-referencing
             _TRACKED_TOOLS = {
@@ -501,6 +502,13 @@ class PolicyVerifier:
             )
             if w6:
                 warnings.append(w6)
+            w7 = check_result_get_line_details_data(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result_content=result_content,
+            )
+            if w7:
+                warnings.append(w7)
             return "\n".join(warnings) if warnings else None
         return None
 

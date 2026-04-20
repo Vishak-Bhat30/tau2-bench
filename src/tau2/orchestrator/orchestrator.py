@@ -987,11 +987,18 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                         scenario = self.task.user_scenario
                         # Extract reason_for_call if available (avoids picking up
                         # MMS/other keywords from simulator meta-instructions).
+                        # scenario can be a dict (raw JSON) or a Pydantic model.
                         if isinstance(scenario, dict):
                             instr = scenario.get('instructions', scenario)
                             if isinstance(instr, dict):
                                 reason = instr.get('reason_for_call', '')
                                 self.tool_call_verifier.set_user_instructions(reason)
+                            else:
+                                self.tool_call_verifier.set_user_instructions(str(instr))
+                        elif hasattr(scenario, 'instructions'):
+                            instr = scenario.instructions
+                            if hasattr(instr, 'reason_for_call') and instr.reason_for_call:
+                                self.tool_call_verifier.set_user_instructions(instr.reason_for_call)
                             else:
                                 self.tool_call_verifier.set_user_instructions(str(instr))
                         else:
