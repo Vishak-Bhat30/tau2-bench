@@ -130,6 +130,14 @@ class PolicyVerifier:
         self.max_feedback_per_tool = max_feedback_per_tool
         self.max_nudges = max_nudges
 
+        # Whether the SLM-based *argument/action* rules are allowed to BLOCK a
+        # write (action-type match, item-variant match, ID accuracy). With a
+        # small/unreliable SLM these produce false positives that block
+        # otherwise-correct writes, so they are OFF by default and only the
+        # deterministic, high-precision rules block. Set TAU2_VERIFIER_SLM_BLOCK=1
+        # to re-enable them (e.g. when using a stronger SLM).
+        self._slm_block = os.getenv("TAU2_VERIFIER_SLM_BLOCK", "0") == "1"
+
         # Maximum in-character reminders to send the user simulator per task
         # (verifier #3 — user impersonation correction).
         self.max_user_reminders = 2
@@ -749,13 +757,13 @@ class PolicyVerifier:
             hint = self._get_corrective_hint(tool_name, tool_args)
             return f"[VERIFIER] {violation}" + (f"\n[HINT] {hint}" if hint else "")
 
-        if self._user_instructions and not self.cheap_only and self.domain == "retail":
+        if self._user_instructions and not self.cheap_only and self.domain == "retail" and self._slm_block:
             item_violation = self._check_item_args(tool_name, tool_args, conversation)
             if item_violation:
                 self._block_counts[_args_key] = self._block_counts.get(_args_key, 0) + 1
                 return f"[VERIFIER] {item_violation}"
 
-        if self._user_instructions and not self.cheap_only and self.domain == "retail":
+        if self._user_instructions and not self.cheap_only and self.domain == "retail" and self._slm_block:
             arg_violation = self._check_tool_args(tool_name, tool_args, conversation)
             if arg_violation:
                 self._block_counts[_args_key] = self._block_counts.get(_args_key, 0) + 1

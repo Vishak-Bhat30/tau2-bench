@@ -187,7 +187,14 @@ ALL_RULES = [
 # Cheap rules need no SLM call.
 CHEAP_RULES = [
     rule_cancel_reason_valid,
+    rule_confirm_before_write,
 ]
+
+# SLM-based rules that may false-block with a small model. Only run when the
+# verifier has SLM blocking enabled (TAU2_VERIFIER_SLM_BLOCK=1).
+_SLM_RULES = {
+    rule_action_type_matches,
+}
 
 # Rules that may consume verifier kwargs (e.g. user_instructions).
 _KWARGS_RULES = {
@@ -207,8 +214,14 @@ def check_all(
 
     Returns the first violation feedback string, or ``None`` if allowed.
     """
+    verifier = kwargs.get("verifier")
+    slm_block = bool(getattr(verifier, "_slm_block", False))
+
     rules = CHEAP_RULES if cheap_only else ALL_RULES
     for rule_fn in rules:
+        # Skip unreliable SLM blocking rules unless explicitly enabled.
+        if rule_fn in _SLM_RULES and not slm_block:
+            continue
         try:
             if rule_fn in _KWARGS_RULES:
                 result = rule_fn(tool_name, tool_args, conversation, db, **kwargs)
