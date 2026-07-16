@@ -1,3 +1,9 @@
+"""
+The content of this file is almost exactly the same as that in the original tau2bench repo (https://github.com/sierra-research/tau2-bench), at
+tau2-bench/src/tau2/registry.py
+The only changes are the imports added from line 61-66, and the
+task registration addition from line 352-356. Everything else is verbatim from the original file.
+"""
 import json
 from typing import Callable, Dict, Optional
 
@@ -52,6 +58,12 @@ from tau2.domains.telecom.environment import (
 )
 from tau2.domains.telecom.environment import (
     get_tasks_split as telecom_domain_get_tasks_split,
+)
+from tau2.domains.telecom.environment import (
+    get_tasks_solo as telecom_domain_get_tasks_solo,
+)
+from tau2.domains.telecom.environment import (
+    get_tasks_solo_split as telecom_domain_get_tasks_solo_split,
 )
 from tau2.environment.environment import Environment
 from tau2.user.user_simulator import DummyUser, UserSimulator
@@ -337,6 +349,11 @@ try:
         telecom_domain_get_tasks,
         "telecom",
         get_task_splits=telecom_domain_get_tasks_split,
+    )
+    registry.register_tasks(
+        telecom_domain_get_tasks_solo,
+        "telecom_solo",
+        get_task_splits=telecom_domain_get_tasks_solo_split,
     )
     registry.register_tasks(
         telecom_domain_get_tasks,

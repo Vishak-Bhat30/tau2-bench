@@ -1,3 +1,18 @@
+"""
+The contents of this file are mostly the same as those in the original tau2bench repo (https://github.com/sierra-research/tau2-bench), at
+tau2-bench/src/tau2/orchestrator/orchestrator.py
+We have made the following changes, everything else is taken
+verbatim from the original:
+
+1. imported the os module
+2. added tool_call_verifier to the Orchestrator __init__ method, and the logic to use it in _execute_tool_calls. 
+Also added code to read env vars to activate verification
+3. added _build_conversation_for_verifier method to build conversation history for the verifier
+4. added _strip_thinking method to clean model output for the verifier. integrated this in Orchestrator.initialize()
+5. Made changes to orchestrator.step() function in order to integrate the tool_call_verifier
+6. Prefer an explicitly passed tool_call_verifier over env-driven self-instantiation, and include the telecom-workflow domain
+"""
+
 import json
 import time
 import uuid
@@ -7,7 +22,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar
-
+import os
 from loguru import logger
 
 from tau2.agent.base_agent import (
@@ -99,6 +114,7 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         seed: Optional[int] = None,
         simulation_id: Optional[str] = None,
         timeout: Optional[float] = None,
+        tool_call_verifier=None,
     ):
         """
         Initialize the base orchestrator.
@@ -114,6 +130,7 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
             seed: Optional random seed for reproducibility. Defaults to None.
             simulation_id: Optional simulation ID. Defaults to generated UUID.
             timeout: Maximum wallclock time in seconds. None means no timeout.
+            tool_call_verifier: Optional PolicyVerifier for checking tool calls against policy.
         """
         self.domain = domain
         self.agent: BaseAgentT = agent
@@ -122,6 +139,17 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         self.task = task
         self.seed = seed
         self.simulation_id = simulation_id or str(uuid.uuid4())
+        # Prefer an explicitly provided verifier (e.g. from build.py when
+        # `enable_tool_call_verifier` is set); otherwise fall back to the
+        # env-driven default so behavior is unchanged when none is passed.
+        self.tool_call_verifier = tool_call_verifier
+        if (
+            self.tool_call_verifier is None
+            and os.getenv("TAU2_VERIFIER", "1") != "0"
+            and domain in ("airline", "retail", "telecom", "telecom-workflow")
+        ):
+            from tau2.verifier.verifier import PolicyVerifier
+            self.tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
 
         # State tracking
         self.agent_state: Optional[Any] = None
@@ -313,6 +341,9 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
     def _execute_tool_calls(self, tool_calls: list[ToolCall]) -> list[ToolMessage]:
         """
         Execute tool calls and return results.
+        If a tool_call_verifier is set, check each write-tool call against
+        policy rules first. Violations are returned as error ToolMessages
+        without executing the actual tool.
 
         Args:
             tool_calls: List of tool calls to execute.
@@ -322,11 +353,101 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         """
         tool_results = []
         for tool_call in tool_calls:
+            # --- Policy verification intercept ---
+            if self.tool_call_verifier and tool_call.requestor == "assistant":
+                conversation = self._build_conversation_for_verifier()
+                feedback = self.tool_call_verifier.verify(
+                    tool_name=tool_call.name,
+                    tool_args=tool_call.arguments,
+                    conversation=conversation,
+                )
+                if feedback:
+                    logger.info("Verifier blocked %s: %s", tool_call.name, feedback)
+                    tool_results.append(
+                        ToolMessage(
+                            id=tool_call.id,
+                            content=feedback,
+                            role="tool",
+                            error=True,
+                            requestor=tool_call.requestor,
+                        )
+                    )
+                    continue
+            # --- Normal execution ---
             tool_result = self.environment.get_response(tool_call)
             if tool_result.error:
                 self.num_errors += 1
+            else:
+                # Record successful tool calls for completion tracking
+                if self.tool_call_verifier:
+                    if tool_call.requestor == "assistant" and hasattr(self.tool_call_verifier, 'record_tool_call'):
+                        self.tool_call_verifier.record_tool_call(tool_call.name, tool_call.arguments)
+                    elif tool_call.requestor == "user" and hasattr(self.tool_call_verifier, 'record_user_tool_call'):
+                        self.tool_call_verifier.record_user_tool_call(tool_call.name)
+                    # --- Post-execution result check (e.g. wrong-line warning) ---
+                    if hasattr(self.tool_call_verifier, 'check_result'):
+                        result_warning = self.tool_call_verifier.check_result(
+                            tool_name=tool_call.name,
+                            tool_args=tool_call.arguments,
+                            result_content=tool_result.content,
+                        )
+                        if result_warning:
+                            logger.info("Post-exec warning for %s: %s", tool_call.name, result_warning)
+                            if not self.environment._is_mutating_tool(tool_call.name):
+                                tool_result = ToolMessage(
+                                    id=tool_result.id,
+                                    content=tool_result.content + "\n\n" + result_warning,
+                                    role=tool_result.role,
+                                    error=tool_result.error,
+                                    requestor=tool_result.requestor,
+                                )
+                            else:
+                                logger.info(
+                                    "Skipping inline warning for mutating tool %s "
+                                    "(would break eval replay)", tool_call.name
+                                )
             tool_results.append(tool_result)
         return tool_results
+
+    @staticmethod
+    def _strip_thinking(text: str) -> str:
+        """Strip <think>...</think> blocks from model output.
+
+        Handles three emission patterns:
+          1. Paired tags:        "<think>...</think>actual"
+          2. Bare closing only:  "reasoning...</think>actual"  (Qwen3-Thinking
+             with chat templates that consume the opening tag)
+          3. Unclosed block:     "<think>reasoning..."         (truncated output)
+        """
+        import re
+        cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+        if cleaned.startswith("<think>"):
+            cleaned = ""
+        return cleaned
+
+    def _build_conversation_for_verifier(self) -> list[dict]:
+        """Build a simplified conversation list for the verifier / SLM.
+
+        Strips <think>...</think> reasoning traces so the SLM only sees
+        the user-visible part of each message.
+        """
+        conversation = []
+        for item in self.get_trajectory():
+            role = getattr(item, "role", "unknown")
+            content = getattr(item, "content", None)
+            if content:
+                clean = self._strip_thinking(str(content))
+                if not clean:
+                    continue
+                conversation.append({"role": role, "content": clean[:1000]})
+            tool_calls = getattr(item, "tool_calls", None)
+            if tool_calls:
+                for tc in tool_calls:
+                    conversation.append({
+                        "role": "assistant",
+                        "content": f"[Tool call: {tc.name}({tc.arguments})]",
+                    })
+        return conversation[-50:]
 
     def _wrap_tool_results(self, tool_results: list[ToolMessage]) -> Message:
         """
@@ -405,6 +526,7 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
         simulation_id: Optional[str] = None,
         validate_communication: bool = False,
         timeout: Optional[float] = None,
+        tool_call_verifier=None,
     ):
         """
         Initialize the Orchestrator for managing simulation between Agent, User, and Environment.
@@ -441,6 +563,7 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
             seed=seed,
             simulation_id=simulation_id,
             timeout=timeout,
+            tool_call_verifier=tool_call_verifier,
         )
 
         # Half-duplex specific attributes
@@ -641,6 +764,8 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                 first_message, self.agent_state = self.agent.generate_next_message(
                     None, self.agent_state
                 )
+                if isinstance(getattr(first_message, "content", None), str):
+                    first_message.content = self._strip_thinking(first_message.content)
                 self.trajectory = [first_message]
                 self.message = first_message
                 # In solo mode, there is no user, so if the message is not a tool call, then we end and report an agent error
@@ -841,8 +966,33 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
             user_msg, self.user_state = self.user.generate_next_message(
                 self.message, self.user_state
             )
+            # Strip reasoning traces so they don't pollute the transcript or
+            # the agent's next prompt.
+            if isinstance(getattr(user_msg, "content", None), str):
+                user_msg.content = self._strip_thinking(user_msg.content)
             user_msg.validate()
             if UserSimulator.is_stop(user_msg):
+                # --- Completion nudge: if required tools not called, nudge agent ---
+                if self.tool_call_verifier and hasattr(self.tool_call_verifier, 'check_completion'):
+                    conversation = self._build_conversation_for_verifier()
+                    nudge = self.tool_call_verifier.check_completion(conversation)
+                    if nudge:
+                        # Replace the stop message with a nudge and continue
+                        logger.info("Completion nudge instead of stopping: %s", nudge)
+                        nudge_msg = UserMessage(
+                            role="user",
+                            content=nudge,
+                        )
+                        nudge_msg.validate()
+                        self.trajectory.append(nudge_msg)
+                        self.message = nudge_msg
+                        self.from_role = Role.USER
+                        self.to_role = Role.AGENT
+                        if self.validate_communication:
+                            self.check_communication_error()
+                        self.step_count += 1
+                        self.environment.sync_tools()
+                        return
                 self.done = True
                 self.termination_reason = TerminationReason.USER_STOP
             # Update voice metadata if audio was generated
@@ -855,6 +1005,20 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                 self.to_role = Role.ENV
             else:
                 self.to_role = Role.AGENT
+                # --- Classify task after first real user message ---
+                if (self.tool_call_verifier
+                        and hasattr(self.tool_call_verifier, 'classify_task')
+                        and not self.tool_call_verifier._expected_tools
+                        and self.step_count <= 3):
+                    # Pass user instructions to verifier for reliable extraction
+                    if (hasattr(self.tool_call_verifier, 'set_user_instructions')
+                            and hasattr(self, 'task') and self.task
+                            and hasattr(self.task, 'user_scenario') and self.task.user_scenario):
+                        self.tool_call_verifier.set_user_instructions(
+                            str(self.task.user_scenario)
+                        )
+                    conversation = self._build_conversation_for_verifier()
+                    self.tool_call_verifier.classify_task(conversation)
         # USER/ENV -> AGENT
         elif (
             self.from_role == Role.USER or self.from_role == Role.ENV
@@ -862,6 +1026,10 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
             agent_msg, self.agent_state = self.agent.generate_next_message(
                 self.message, self.agent_state
             )
+            # Strip reasoning traces so they don't pollute the transcript or
+            # the user simulator's next prompt.
+            if isinstance(getattr(agent_msg, "content", None), str):
+                agent_msg.content = self._strip_thinking(agent_msg.content)
             agent_msg.validate()
             if self.agent.is_stop(agent_msg):
                 self.done = True

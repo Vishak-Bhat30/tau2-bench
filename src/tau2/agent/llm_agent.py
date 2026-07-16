@@ -1,3 +1,10 @@
+"""
+The contents of this file are exactly the same
+as in the original tau2bench repo (https://github.com/sierra-research/tau2-bench) file tau2-bench/src/tau2/agent/llm_agent.py,
+barring the following changes: (everything else is verbatim from the original file)
+1. Modified LLMAgent._generate_next_message to amplify verifier feedback by injecting it as a system message in the next turn
+2. Added nudging logic in LLMSoloAgent.generate_next_message to retry with tool_choice="required" if the model fails to make a tool call on the first try with mode 'auto'
+"""
 from typing import Generic, List, Optional, TypeVar
 
 from loguru import logger
@@ -15,6 +22,7 @@ from tau2.data_model.message import (
     Message,
     MultiToolMessage,
     SystemMessage,
+    ToolMessage,
     UserMessage,
 )
 from tau2.data_model.tasks import Action, Task
@@ -124,7 +132,41 @@ class LLMAgent(
             state.messages.extend(message.tool_messages)
         else:
             state.messages.append(message)
+
+        # Amplify verifier feedback: collect any [VERIFIER] errors from tool
+        # messages and inject them as a prominent system message so the agent
+        # attends to the feedback and corrects its behaviour.
+        verifier_feedbacks = []
+        verifier_hints = []
+        recent_msgs = state.messages[-10:]  # only look at recent messages
+        for m in recent_msgs:
+            if isinstance(m, ToolMessage) and m.error and m.content and "[VERIFIER]" in m.content:
+                verifier_feedbacks.append(m.content)
+                # Extract [HINT] if present
+                if "[HINT]" in m.content:
+                    hint_part = m.content.split("[HINT]", 1)[1].strip()
+                    if hint_part:
+                        verifier_hints.append(hint_part)
+
         messages = state.system_messages + state.messages
+        if verifier_feedbacks:
+            nudge = (
+                "IMPORTANT: Your previous tool call was REJECTED by the policy verifier.\n\n"
+                "VIOLATION:\n"
+                + "\n".join(verifier_feedbacks)
+            )
+            if verifier_hints:
+                nudge += (
+                    "\n\nCORRECTIVE ACTION — here is what you should do instead:\n"
+                    + "\n".join(f"• {h}" for h in verifier_hints)
+                )
+            nudge += (
+                "\n\nYou MUST fix the issue before retrying. "
+                "Either use different arguments, a different tool, "
+                "or explain to the user why their request cannot be fulfilled."
+            )
+            messages = messages + [SystemMessage(role="system", content=nudge)]
+
         assistant_message = generate(
             model=self.llm,
             tools=self.tools,
@@ -470,12 +512,28 @@ class LLMSoloAgent(
             model=self.llm,
             tools=self.tools,
             messages=messages,
-            tool_choice="required",
+            tool_choice="auto",
             call_name="agent_solo_response",
             **self.llm_args,
         )
         if not assistant_message.is_tool_call():
-            raise ValueError("LLMSoloAgent only supports tool calls.")
+            # If model didn't make a tool call, check if it's trying to stop
+            if assistant_message.content and self.STOP_TOKEN in assistant_message.content:
+                return assistant_message, state
+            # Model responded with text instead of a tool call — append it and
+            # retry once with tool_choice="required" to nudge it back
+            state.messages.append(assistant_message)
+            messages = state.system_messages + state.messages
+            assistant_message = generate(
+                model=self.llm,
+                tools=self.tools,
+                messages=messages,
+                tool_choice="required",
+                call_name="agent_solo_response_retry",
+                **self.llm_args,
+            )
+            if not assistant_message.is_tool_call():
+                raise ValueError("LLMSoloAgent only supports tool calls.")
         message = self._check_if_stop_toolcall(assistant_message)
         state.messages.append(assistant_message)
         return assistant_message, state

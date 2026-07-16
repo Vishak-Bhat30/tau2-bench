@@ -1,11 +1,12 @@
 """
-Layer 3: Batch runner.
+The contents of this file are mostly the same as those in the original tau2bench
+repo (https://github.com/sierra-research/tau2-bench), file tau2-bench/src/tau2/runner/batch.py.
+The only changes are the following: (everything is verbatim from the original repo)
 
-Orchestrates batch execution with concurrency, checkpointing, retries,
-logging, and optional side effects (auto-review, audio saving).
-
-Uses Layer 2 (build) to construct instances and Layer 1 (simulation) to
-execute them.
+1. removed from tau2.data_model.voice_personas import warn_if_non_official_voices
+2. changed the default value of the evaluation_type parameter in the run_tasks function from EvaluationType.ALL to EvaluationType.ALL_WITH_NL_ASSERTIONS
+3. removed kwargs from the invocation of get_unique_embedder_configs_for_retrieval_configs
+4. made some changes in run_domain() to handle solo mode
 """
 
 import asyncio
@@ -35,7 +36,6 @@ from tau2.data_model.simulation import (
 )
 from tau2.data_model.tasks import Task
 from tau2.data_model.voice import SynthesisConfig, VoiceSettings
-from tau2.data_model.voice_personas import warn_if_non_official_voices
 from tau2.evaluator.evaluator import EvaluationType
 from tau2.evaluator.reviewer import check_hallucination, format_hallucination_feedback
 from tau2.metrics.agent_metrics import compute_metrics
@@ -132,7 +132,6 @@ def run_auto_review(
     simulation: SimulationRun,
     task: Task,
     review_mode: str,
-    review_model: str,
     user: str,
     llm_user: Optional[str],
     llm_args_user: Optional[dict],
@@ -147,7 +146,6 @@ def run_auto_review(
         simulation: The completed simulation to review.
         task: The task specification.
         review_mode: "full" (agent+user) or "user" (user only).
-        review_model: LLM model to use for review and auth classification.
         user: User implementation name.
         llm_user: LLM used by user simulator.
         llm_args_user: LLM args for user simulator.
@@ -183,7 +181,6 @@ def run_auto_review(
         user_info=review_user_info,
         policy=policy,
         interruption_enabled=is_audio_native,
-        review_model=review_model,
     )
 
     if review_mode == "full":
@@ -352,7 +349,6 @@ def run_single_task(
     audio_taps: bool = False,
     auto_review: bool = False,
     review_mode: str = "full",
-    review_model: Optional[str] = None,
     hallucination_feedback: Optional[str] = None,
 ) -> SimulationRun:
     """Run a single task simulation with logging and optional side effects.
@@ -376,7 +372,6 @@ def run_single_task(
         audio_debug: Enable audio debug analysis.
         auto_review: Run LLM conversation review after simulation.
         review_mode: Review mode ("full" or "user").
-        review_model: LLM model to use for review and auth classification.
 
     Returns:
         The completed SimulationRun with reward_info attached.
@@ -426,7 +421,6 @@ def run_single_task(
                 simulation=simulation,
                 task=task,
                 review_mode=review_mode,
-                review_model=review_model or config.review_model,
                 user=config.effective_user,
                 llm_user=config.llm_user,
                 llm_args_user=config.llm_args_user,
@@ -465,7 +459,7 @@ def run_tasks(
     *,
     save_path: Optional[Path] = None,
     save_dir: Optional[Path] = None,
-    evaluation_type: EvaluationType = EvaluationType.ALL,
+    evaluation_type: EvaluationType = EvaluationType.ALL_WITH_NL_ASSERTIONS,
     console_display: bool = True,
     results_format: str = "json",
 ) -> Results:
@@ -559,8 +553,7 @@ def run_tasks(
         embedder_configs = None
         if retrieval_config:
             embedder_configs = get_unique_embedder_configs_for_retrieval_configs(
-                [retrieval_config],
-                kwargs,
+                [retrieval_config]
             )
         warm_kb_cache(embedder_configs)
         knowledge_base = get_knowledge_base()
@@ -668,7 +661,6 @@ def run_tasks(
                 audio_taps=config.audio_taps if is_voice else False,
                 auto_review=config.auto_review,
                 review_mode=config.review_mode,
-                review_model=config.review_model,
                 hallucination_feedback=hallucination_feedback,
             )
 
@@ -868,11 +860,14 @@ def run_domain(config: RunConfig) -> Results:
     config.validate()
     ConsoleDisplay.display_run_config(config)
 
-    if isinstance(config, VoiceRunConfig):
-        warn_if_non_official_voices()
-
     # Load tasks
     task_set_name = config.task_set_name or config.domain
+    # In solo mode for telecom, use the solo task set (with updated ticket text)
+    solo_mode = registry.get_agent_metadata(
+        config.effective_agent, "solo_mode", default=False
+    )
+    if solo_mode and task_set_name == "telecom":
+        task_set_name = "telecom_solo"
     tasks = get_tasks(
         task_set_name=task_set_name,
         task_split_name=config.task_split_name,

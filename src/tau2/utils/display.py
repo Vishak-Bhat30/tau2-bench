@@ -143,6 +143,27 @@ class ConsoleDisplay:
         return escape(text)
 
     @staticmethod
+    def strip_thinking(text: str) -> str:
+        """Trim reasoning traces so only user-visible content is displayed.
+
+        Removes everything up to and including the closing ``</think>`` tag.
+        Handles three emission patterns:
+          1. Paired tags:        "<think>...</think>actual"  -> "actual"
+          2. Bare closing only:  "reasoning...</think>actual" -> "actual"
+          3. Unclosed block:     "<think>reasoning..."        -> ""
+        """
+        import re
+
+        # Remove paired <think>...</think> blocks first.
+        cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+        # Remove any leading text up to and including a bare closing </think>.
+        cleaned = re.sub(r"^.*?</think>", "", cleaned, flags=re.DOTALL).strip()
+        # Unclosed <think> block with no closing tag: drop everything.
+        if cleaned.startswith("<think>"):
+            return ""
+        return cleaned
+
+    @staticmethod
     def _get_grouping_pattern(info: dict) -> str | None:
         """Get grouping pattern for tick consolidation based on turn-taking action.
 
@@ -747,7 +768,7 @@ class ConsoleDisplay:
                 current_turn = None
                 for msg in simulation.messages:
                     content = (
-                        cls.escape_markup(msg.content)
+                        cls.escape_markup(cls.strip_thinking(msg.content))
                         if msg.content is not None
                         else ""
                     )

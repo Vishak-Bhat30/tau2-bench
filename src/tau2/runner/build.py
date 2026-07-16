@@ -1,4 +1,15 @@
 """
+This file is based on the original tau2-bench repo
+(https://github.com/sierra-research/tau2-bench), file tau2-bench/src/tau2/runner/build.py.
+Changes made for the interwhen overlay (the rest follows the original file):
+1. Build a PolicyVerifier and pass it to the Orchestrator when
+   config.enable_tool_call_verifier is set (airline / retail / telecom /
+   telecom-workflow domains).
+2. build_orchestrator() defaults user_persona_config from config.user_persona_config.
+3. build_agent(): catch ValueError and log at debug instead of silently
+   swallowing user-tool load failures in solo mode.
+4. Raise ValueError instead of assert when DummyUser is used without solo_mode.
+
 Layer 2: Build functions.
 
 Turn config/names into live instances (environment, agent, user, orchestrator).
@@ -111,8 +122,8 @@ def build_agent(
             user_tools = environment.get_user_tools()
             if user_tools:
                 tools = tools + user_tools
-        except Exception:
-            pass
+        except ValueError as e:
+            logger.debug(f"No user tools available in solo mode: {e}")
 
     return agent_factory(
         tools=tools,
@@ -152,7 +163,7 @@ def build_user(
         A fully constructed half-duplex user instance.
 
     Raises:
-        AssertionError: If DummyUser is used without solo_mode.
+        ValueError: If DummyUser is used without solo_mode.
     """
     UserConstructor = registry.get_user_constructor(user_name)
 
@@ -162,8 +173,8 @@ def build_user(
         user_tools = None
 
     # Validate DummyUser usage
-    if issubclass(UserConstructor, DummyUser):
-        assert solo_mode, "Dummy user can only be used with solo agent"
+    if issubclass(UserConstructor, DummyUser) and not solo_mode:
+        raise ValueError("Dummy user can only be used with solo agent")
 
     user_kwargs = {
         "tools": user_tools,
@@ -307,33 +318,6 @@ def build_voice_user(
 # =============================================================================
 
 
-def _derive_read_log_allowlist(task: Task) -> set:
-    """Set of discoverable-tool names required by the task's golden trajectory.
-
-    The banking_knowledge ``call_discoverable_agent_tool`` wrapper logs every
-    call to the ``agent_discoverable_tools`` DB table, which is then hashed
-    for the env-eval reward. For READ-only discoverable tools this means any
-    extra validation call (e.g. an agent reading a balance "just in case")
-    diverges the hash and zeros the reward — even though the KB explicitly
-    encourages such reads.
-
-    To keep the "agent must call this read to verify" assertion (tasks 046,
-    085, etc.) while not punishing extra reads, we extract the set of tool
-    names appearing in golden ``call_discoverable_agent_tool`` actions and
-    pass it as an allowlist to the toolkit. Calls to writes are always
-    logged; calls to reads are only logged when in this set.
-    """
-    allowlist: set = set()
-    if task.evaluation_criteria is None:
-        return allowlist
-    for action in task.evaluation_criteria.actions or []:
-        if action.name == "call_discoverable_agent_tool":
-            name = (action.arguments or {}).get("agent_tool_name")
-            if name:
-                allowlist.add(name)
-    return allowlist
-
-
 def _build_env_kwargs(config: RunConfig, task: Task) -> dict:
     """Build env_kwargs from a RunConfig for the environment constructor.
 
@@ -345,11 +329,9 @@ def _build_env_kwargs(config: RunConfig, task: Task) -> dict:
     if retrieval_config is not None:
         env_kwargs["retrieval_variant"] = retrieval_config
         env_kwargs["task"] = task
-        rk = dict(getattr(config, "retrieval_config_kwargs", None) or {})
-        if rk:
-            env_kwargs["retrieval_kwargs"] = rk
-    if getattr(config, "domain", None) == "banking_knowledge":
-        env_kwargs["read_log_allowlist"] = _derive_read_log_allowlist(task)
+        retrieval_config_kwargs = getattr(config, "retrieval_config_kwargs", None)
+        if retrieval_config_kwargs:
+            env_kwargs["retrieval_kwargs"] = retrieval_config_kwargs
     return env_kwargs
 
 
@@ -392,6 +374,18 @@ def build_text_orchestrator(
 
     environment = build_environment(domain, solo_mode=solo_mode, env_kwargs=env_kwargs)
 
+    # Build policy verifier if enabled
+    tool_call_verifier = None
+    if getattr(config, "enable_tool_call_verifier", False) and domain in (
+        "airline",
+        "retail",
+        "telecom",
+        "telecom-workflow",
+    ):
+        from tau2.verifier.verifier import PolicyVerifier
+        tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
+        logger.info(f"Policy verifier enabled for domain={domain}")
+
     agent = build_agent(
         config.effective_agent,
         environment,
@@ -424,6 +418,7 @@ def build_text_orchestrator(
         simulation_id=simulation_id,
         validate_communication=config.enforce_communication_protocol,
         timeout=config.timeout,
+        tool_call_verifier=tool_call_verifier,
     )
 
     logger.debug(
@@ -566,6 +561,9 @@ def build_orchestrator(
     Returns:
         A fully constructed Orchestrator or FullDuplexOrchestrator.
     """
+    if user_persona_config is None:
+        user_persona_config = getattr(config, "user_persona_config", None)
+
     if isinstance(config, VoiceRunConfig):
         return build_voice_orchestrator(
             config,

@@ -1,3 +1,10 @@
+"""This file is almost exactly the same
+as that in the original tau2bench repo (https://github.com/sierra-research/tau2-bench), at tau2-bench/src/tau2/user/user_simulator.py. 
+The only change is the addition of **kwargs in the DummyUser init method. 
+Everything else is verbatim from the original file.
+"""
+
+
 from typing import Generic, Optional, Tuple, TypeVar
 
 from loguru import logger
@@ -269,7 +276,7 @@ class UserSimulator(
 class DummyUser(UserSimulator):
     """A dummy user to run a agent solo simulation."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__(llm="dummy")
 
     def get_init_state(

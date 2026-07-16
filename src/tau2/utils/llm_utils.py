@@ -1,3 +1,17 @@
+"""
+The contents of this file are taken from tau2-bench/src/tau2/utils/llm_utils.py, with some modifications. 
+Barring the following modifications, everything else is taken verbatim
+from the original repo (https://github.com/sierra-research/tau2-bench):
+
+1. Addition of litellm.suppress_debug_info = True at line 24 to suppress LiteLLM debug info in the logs
+2. Added some extra tracking to get_response_usage(), to account
+for reasoning tokens
+3. Added extra error handling and logging in generate() around parsing tool call arguments
+4. Added tracking of token usage for reasoning tokens in
+get_token_usage()
+5. Added stripping of thinking trace in extract_json_from_llm_response()
+"""
+
 import json
 import logging
 import os
@@ -16,6 +30,8 @@ from litellm import completion, completion_cost
 from litellm.caching.caching import Cache
 from litellm.main import ModelResponse, Usage
 from loguru import logger
+
+litellm.suppress_debug_info = True
 
 from tau2.config import (
     DEFAULT_LLM_CACHE_TYPE,
@@ -126,7 +142,7 @@ def get_response_cost(response: ModelResponse) -> float:
     try:
         cost = completion_cost(completion_response=response)
     except Exception as e:
-        logger.error(e)
+        logger.debug(e)
         return 0.0
     return cost
 
@@ -135,10 +151,17 @@ def get_response_usage(response: ModelResponse) -> Optional[dict]:
     usage: Optional[Usage] = response.get("usage")
     if usage is None:
         return None
-    return {
+    result = {
         "completion_tokens": usage.completion_tokens,
         "prompt_tokens": usage.prompt_tokens,
     }
+    # Extract reasoning tokens from completion_tokens_details (thinking models)
+    details = getattr(usage, "completion_tokens_details", None)
+    if details is not None:
+        reasoning = getattr(details, "reasoning_tokens", None)
+        if reasoning is not None:
+            result["reasoning_tokens"] = reasoning
+    return result
 
 
 def to_tau2_messages(
@@ -433,14 +456,20 @@ def generate(
     )
     content = response_choice.message.content
     raw_tool_calls = response_choice.message.tool_calls or []
-    tool_calls = [
-        ToolCall(
-            id=tool_call.id,
-            name=tool_call.function.name,
-            arguments=json.loads(tool_call.function.arguments),
+    tool_calls = []
+    for tool_call in raw_tool_calls:
+        try:
+            arguments = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
+        except json.JSONDecodeError:
+            logger.warning(f"Failed to parse tool call arguments for {tool_call.function.name}: {tool_call.function.arguments!r}")
+            arguments = {}
+        tool_calls.append(
+            ToolCall(
+                id=tool_call.id,
+                name=tool_call.function.name,
+                arguments=arguments,
+            )
         )
-        for tool_call in raw_tool_calls
-    ]
     tool_calls = tool_calls or None
 
     message = AssistantMessage(
@@ -494,7 +523,7 @@ def get_token_usage(messages: list[Message]) -> dict:
     """
     Get the token usage of the interaction between the agent and the user.
     """
-    usage = {"completion_tokens": 0, "prompt_tokens": 0}
+    usage = {"completion_tokens": 0, "prompt_tokens": 0, "reasoning_tokens": 0}
     for message in messages:
         if isinstance(message, ToolMessage):
             continue
@@ -503,13 +532,18 @@ def get_token_usage(messages: list[Message]) -> dict:
             continue
         usage["completion_tokens"] += message.usage["completion_tokens"]
         usage["prompt_tokens"] += message.usage["prompt_tokens"]
+        usage["reasoning_tokens"] += message.usage.get("reasoning_tokens", 0)
     return usage
 
 
 def extract_json_from_llm_response(response: str) -> str:
     """
-    Extract JSON from an LLM response, handling markdown code blocks.
+    Extract JSON from an LLM response, handling markdown code blocks and <think> tags.
     """
+    # Strip thinking traces (both <think>...</think> and bare ...)</think> patterns)
+    response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
+    response = re.sub(r"^.*?</think>", "", response, flags=re.DOTALL).strip()
+
     # Try to extract JSON from markdown code blocks
     # Match ```json ... ``` or ``` ... ```
     pattern = r"```(?:json)?\s*([\s\S]*?)```"

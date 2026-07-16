@@ -1,3 +1,11 @@
+"""
+The contents of this file are exactly the same as in the original tau2bench repo (https://github.com/sierra-research/tau2-bench) at 
+tau2-bench/src/tau2/environment.py, barring the following change: (everything else is verbatim from
+the original file)
+
+1. modified Environment.set_state to skip verifier feedback messages during replay.
+"""
+
 import json
 from copy import deepcopy
 from datetime import date, datetime
@@ -356,20 +364,14 @@ class Environment:
 
         action_responses = get_actions_from_messages(message_history)
         for tool_call, expected_response in action_responses:
-            if not self._has_tool(tool_call.name):
-                # Hallucinated tool name. The live env returned a
-                # ToolMessage(error=True) for this call and made no state
-                # change, so replay it as a no-op. The agent's subsequent
-                # recovery (if any) will still be replayed and determine
-                # the final state. Repeated hallucination is bounded
-                # upstream by the orchestrator's max_errors guard, which
-                # ends the live sim with TerminationReason.TOO_MANY_ERRORS
-                # before evaluation runs.
-                logger.debug(
-                    f"Skipping unknown tool '{tool_call.name}' during replay "
-                    "(no-op, matching live env behavior on hallucinated tools)."
-                )
+            # Skip verifier feedback messages during replay
+            if isinstance(expected_response.content, str) and "[VERIFIER]" in expected_response.content:
                 continue
+            if not self._has_tool(tool_call.name):
+                raise ValueError(
+                    f"Unknown tool '{tool_call.name}' encountered during replay. "
+                    "The tool does not exist in the current environment."
+                )
             # Non-mutating tools (reads, thinks, etc.) don't change state --
             # skip them to avoid re-execution and non-deterministic output
             # comparison issues.

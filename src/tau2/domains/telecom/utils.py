@@ -1,3 +1,10 @@
+"""
+The content of this file is mostly exactly the same as that in the original tau2bench repo (https://github.com/sierra-research/tau2-bench), at
+tau2-bench/src/tau2/domains/telecom/utils.py. 
+The only change is the addition of TELECOM_TASK_SET_SOLO_PATH at line 30.
+Everything else is verbatim from the original file.
+"""
+
 from datetime import date, datetime
 
 from tau2.utils.utils import DATA_DIR
@@ -20,6 +27,7 @@ TELECOM_TECH_SUPPORT_POLICY_WORKFLOW_SOLO_PATH = (
 # TELECOM_TASK_SET_PATH_FULL = TELECOM_DATA_DIR / "tasks_full.json" # Not used anymore. Use full task split instead
 # TELECOM_TASK_SET_PATH_SMALL = TELECOM_DATA_DIR / "tasks_small.json" # Not used anymore. Use small task split instead
 TELECOM_TASK_SET_PATH = TELECOM_DATA_DIR / "tasks.json"
+TELECOM_TASK_SET_SOLO_PATH = TELECOM_DATA_DIR / "tasks_solo.json"
 
 
 def get_now() -> datetime:

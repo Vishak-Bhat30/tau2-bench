@@ -1,3 +1,16 @@
+"""
+This file is based on the original tau2-bench repo
+(https://github.com/sierra-research/tau2-bench), file
+tau2-bench/src/tau2/data_model/simulation.py.
+Changes made for the interwhen overlay (the rest follows the original file):
+1. Added the enable_tool_call_verifier and user_persona_config fields to BaseRunConfig.
+2. Use default_factory for Info.text_streaming_config to avoid a shared mutable default.
+3. Results.to_df() tolerates missing tasks instead of raising StopIteration.
+4. Define DEFAULT_BUFFER_UNTIL_COMPLETE / DEFAULT_FAST_FORWARD_MODE locally
+   (default False) instead of importing them, so the overlay does not require
+   patching tau2/config.py.
+"""
+
 import json
 from collections.abc import Iterator
 from copy import deepcopy
@@ -6,7 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import pandas as pd
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 if TYPE_CHECKING:
@@ -25,7 +38,6 @@ from tau2.config import (
     DEFAULT_LLM_AGENT,
     DEFAULT_LLM_ARGS_AGENT,
     DEFAULT_LLM_ARGS_USER,
-    DEFAULT_LLM_EVAL_USER_SIMULATOR,
     DEFAULT_LLM_USER,
     DEFAULT_LOG_LEVEL,
     DEFAULT_MAX_CONCURRENCY,
@@ -49,6 +61,12 @@ from tau2.config import (
     DEFAULT_YIELD_THRESHOLD_WHEN_INTERRUPTED_SECONDS,
     DEFAULT_YIELD_THRESHOLD_WHEN_INTERRUPTING_SECONDS,
 )
+
+# Defined locally (default False) instead of imported from tau2.config, so the
+# overlay works on an older upstream clone that doesn't define these yet.
+DEFAULT_BUFFER_UNTIL_COMPLETE = False
+DEFAULT_FAST_FORWARD_MODE = False
+
 from tau2.data_model.audio_effects import EffectTimeline
 from tau2.data_model.message import Message, Tick
 from tau2.data_model.persona import PersonaConfig
@@ -70,9 +88,11 @@ class AudioNativeConfig(BaseModel):
     """
 
     # Provider selection
-    provider: Literal["openai", "gemini", "xai", "nova", "qwen", "livekit"] = Field(
+    provider: Literal[
+        "openai", "gemini", "xai", "nova", "qwen", "deepgram", "livekit"
+    ] = Field(
         default=DEFAULT_AUDIO_NATIVE_PROVIDER,
-        description="Audio native API provider: 'openai' (OpenAI Realtime), 'gemini' (Gemini Live), 'xai' (xAI Grok Voice Agent), 'nova' (Amazon Nova Sonic), 'qwen' (Alibaba Qwen Omni), or 'livekit' (LiveKit cascaded STT→LLM→TTS)",
+        description="Audio native API provider: 'openai' (OpenAI Realtime), 'gemini' (Gemini Live), 'xai' (xAI Grok Voice Agent), 'nova' (Amazon Nova Sonic), 'qwen' (Alibaba Qwen Omni), 'deepgram' (Deepgram Voice Agent), or 'livekit' (LiveKit cascaded STT→LLM→TTS)",
     )
 
     # Cascaded config (for livekit provider)
@@ -84,10 +104,6 @@ class AudioNativeConfig(BaseModel):
     model: str = Field(
         default=DEFAULT_AUDIO_NATIVE_MODELS[DEFAULT_AUDIO_NATIVE_PROVIDER],
         description="Audio native model to use",
-    )
-    reasoning_effort: Optional[str] = Field(
-        default=None,
-        description="Reasoning effort for thinking models: 'minimal', 'low', 'medium', 'high'. If None, not sent.",
     )
 
     # Timing configuration
@@ -157,6 +173,14 @@ class AudioNativeConfig(BaseModel):
     )
 
     # Agent behavior
+    buffer_until_complete: bool = Field(
+        default=DEFAULT_BUFFER_UNTIL_COMPLETE,
+        description="Buffer audio until complete utterance (OpenAI only)",
+    )
+    fast_forward_mode: bool = Field(
+        default=DEFAULT_FAST_FORWARD_MODE,
+        description="Skip wall-clock waiting when enough audio is buffered (OpenAI only)",
+    )
     use_xml_prompt: bool = Field(
         default=False,
         description="Use XML tags in system prompt. Defaults to False (plain text) for all providers.",
@@ -381,6 +405,13 @@ class BaseRunConfig(BaseModel):
             default=False,
         ),
     ]
+    user_persona_config: Annotated[
+        Optional[PersonaConfig],
+        Field(
+            description="Persona configuration for the user simulator (mainly for text runs).",
+            default=None,
+        ),
+    ]
 
     # ---- Retry ----
     max_retries: Annotated[
@@ -420,13 +451,6 @@ class BaseRunConfig(BaseModel):
             default="full",
         ),
     ]
-    review_model: Annotated[
-        str,
-        Field(
-            description="LLM model to use for review calls when auto_review is enabled.",
-            default=DEFAULT_LLM_EVAL_USER_SIMULATOR,
-        ),
-    ]
     hallucination_retries: Annotated[
         int,
         Field(
@@ -463,13 +487,6 @@ class BaseRunConfig(BaseModel):
     ]
 
     # ---- Abstract-ish properties (subclasses must override) ----
-
-    @model_validator(mode="after")
-    def _default_banking_retrieval_config(self) -> "BaseRunConfig":
-        """Default retrieval_config to alltools for banking_knowledge."""
-        if self.domain == "banking_knowledge" and self.retrieval_config is None:
-            object.__setattr__(self, "retrieval_config", "alltools")
-        return self
 
     @property
     def effective_agent(self) -> str:
@@ -570,6 +587,13 @@ class TextRunConfig(BaseRunConfig):
         Field(
             description="Text streaming configuration",
             default=None,
+        ),
+    ]
+    enable_tool_call_verifier: Annotated[
+        bool,
+        Field(
+            description="Whether to enable policy-based tool call verification",
+            default=False,
         ),
     ]
 
@@ -1211,7 +1235,7 @@ class Info(BaseModel):
     )
     text_streaming_config: Optional[dict] = Field(
         description="Text streaming configuration",
-        default=deepcopy(DEFAULT_TEXT_STREAMING_CONFIG),
+        default_factory=lambda: deepcopy(DEFAULT_TEXT_STREAMING_CONFIG),
     )
     speech_complexity: Optional[SpeechComplexity] = Field(
         description="Speech complexity level for audio-native mode",
@@ -1671,10 +1695,12 @@ class Results(BaseModel):
     def to_df(self) -> pd.DataFrame:
         """Convert a Results object to a pandas DataFrame."""
         rows = []
+        tasks_by_id = {t.id: t for t in self.tasks}
         for sim in self.simulations:
             row = self._sim_to_row(sim, self.info)
-            task = next(t for t in self.tasks if t.id == sim.task_id)
-            row.update(self._task_metrics(task))
+            task = tasks_by_id.get(sim.task_id)
+            if task:
+                row.update(self._task_metrics(task))
             rows.append(row)
         return pd.DataFrame(rows)
 
