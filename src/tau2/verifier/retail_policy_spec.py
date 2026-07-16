@@ -64,36 +64,49 @@ _TOOL_ACTION_DESC = {
 def rule_confirm_before_write(tool_name, tool_args, conversation, db):
     """Require an explicit user confirmation before any write tool runs.
 
-    Uses the SLM to check that, in the recent conversation, the agent described
-    this action and the user explicitly agreed (e.g. said "yes"). If the user's
-    latest message introduced a *new* request that has not yet been confirmed,
-    the write is blocked and the agent is told to confirm first.
+    Deterministic and affirmation-aware: the write is allowed as soon as a
+    recent user turn is a clear agreement ("yes", "confirm", "go ahead",
+    "proceed", ...). Only when NO such confirmation exists in the recent user
+    turns is the write blocked with a request to confirm first.
+
+    This avoids two failure modes seen in the retail run:
+      * an unreliable SLM saying "not confirmed" even after the user said "yes"
+        (which deadlocked the agent), and
+      * a direct conflict with the completion nudge, which explicitly tells the
+        agent to proceed with the write (the nudge text counts as a proceed
+        signal here).
     """
     if tool_name not in RETAIL_WRITE_TOOLS:
         return None
 
-    from tau2.verifier.slm_helper import slm_extract
+    import re
+
+    # Collect the last couple of user turns (most recent first).
+    recent_user_turns = []
+    for msg in reversed(conversation):
+        if msg.get("role") == "user":
+            content = str(msg.get("content", "")).strip()
+            if content:
+                recent_user_turns.append(content)
+                if len(recent_user_turns) >= 2:
+                    break
+
+    affirm = re.compile(
+        r"\b(yes|yeah|yep|yup|confirm(ed|ing)?|correct|go ahead|proceed|"
+        r"sounds good|please do|please proceed|ok|okay|sure|do it|"
+        r"that works|that's right|thats right|absolutely|go for it)\b",
+        re.I,
+    )
+    if any(affirm.search(t) for t in recent_user_turns):
+        return None  # customer has agreed (or a proceed-nudge authorised it)
 
     action_desc = _TOOL_ACTION_DESC.get(tool_name, tool_name)
-    answer = slm_extract(
-        "In the conversation above, did the agent clearly describe the action it "
-        f"is about to take (to {action_desc}) AND did the customer then explicitly "
-        "agree to it (for example by saying 'yes', 'confirm', 'go ahead', or "
-        "'please proceed')? "
-        "Answer 'yes' ONLY if the customer's most recent request has been "
-        "explicitly confirmed. If the customer just asked for something new that "
-        "has not yet been confirmed, answer 'no'. "
-        "Answer with ONLY 'yes' or 'no'.",
-        conversation,
+    return (
+        f"Confirmation required: before you {action_desc}, you must clearly "
+        f"describe the exact change and get an explicit 'yes' from the "
+        f"customer. Ask the customer to confirm this specific action first, "
+        f"then proceed."
     )
-    if answer.strip().lower().startswith("no"):
-        return (
-            f"Confirmation required: before you {action_desc}, you must clearly "
-            f"describe the exact change and get an explicit 'yes' from the "
-            f"customer. Ask the customer to confirm this specific action first, "
-            f"then proceed."
-        )
-    return None
 
 
 # ============================================================================

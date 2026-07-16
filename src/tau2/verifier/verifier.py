@@ -543,6 +543,29 @@ class PolicyVerifier:
         if "transfer_to_human_agents" in self._called_write_tools:
             return None
 
+        # Prerequisite guard: only nudge once the agent has actually established
+        # context (a successful user/order/customer lookup). If the agent is
+        # still stuck gathering info (e.g. identity verification failed), pushing
+        # it to "execute now" is counter-productive and just adds noise, so we
+        # allow the stop instead.
+        _LOOKUP_TOOLS = {
+            "retail": {
+                "find_user_id_by_email", "find_user_id_by_name_zip",
+                "get_order_details", "get_user_details",
+            },
+            "airline": {"get_user_details", "get_reservation_details"},
+            "telecom": {
+                "get_customer_by_phone", "get_customer_by_id",
+                "get_customer_by_name", "get_details_by_id",
+            },
+        }.get(self.domain, set())
+        if _LOOKUP_TOOLS and not (_LOOKUP_TOOLS & set(self._called_all_tools)):
+            logger.info(
+                "No successful context lookup yet (%s); allowing stop without nudge",
+                self.domain,
+            )
+            return None
+
         # Compare expected vs. actually-executed write tools (count-aware so
         # multi-action tasks like "cancel two orders" are handled correctly).
         from collections import Counter
