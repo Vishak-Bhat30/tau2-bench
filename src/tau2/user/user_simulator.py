@@ -1,6 +1,10 @@
 """This file is almost exactly the same
 as that in the original tau2bench repo (https://github.com/sierra-research/tau2-bench), at tau2-bench/src/tau2/user/user_simulator.py. 
-The only change is the addition of **kwargs in the DummyUser init method. 
+Changes from the original:
+1. The addition of **kwargs in the DummyUser init method.
+2. Added UserSimulator.regenerate_with_guidance() so the verifier can re-prompt
+   the user simulator in-character when it slips into agent-style output
+   (verifier #3 — user impersonation correction).
 Everything else is verbatim from the original file.
 """
 
@@ -271,6 +275,54 @@ class UserSimulator(
                     )
                 )
         return user_message
+
+    def regenerate_with_guidance(
+        self, guidance: str, state: UserStateType
+    ) -> Tuple[UserMessage, UserStateType]:
+        """Re-generate the most recent user turn with an extra system reminder.
+
+        Used by the verifier (verifier #3) when the previously generated user
+        message slipped out of character and behaved like the support agent.
+        The last user message in ``state`` is discarded and a new one is
+        produced with ``guidance`` appended as an additional system instruction.
+        """
+        # Drop the out-of-character message we are replacing.
+        if state.messages and isinstance(state.messages[-1], UserMessage):
+            state.messages.pop()
+
+        guided_system = state.system_messages + [
+            SystemMessage(role="system", content=guidance)
+        ]
+        messages = guided_system + state.flip_roles()
+
+        assistant_message = generate(
+            model=self.llm,
+            messages=messages,
+            tools=self.tools,
+            call_name="user_simulator_reminder",
+            **self.llm_args,
+        )
+
+        user_message = UserMessage(
+            role="user",
+            content=assistant_message.content,
+            cost=assistant_message.cost,
+            usage=assistant_message.usage,
+            raw_data=assistant_message.raw_data,
+        )
+        if assistant_message.tool_calls is not None:
+            user_message.tool_calls = []
+            for tool_call in assistant_message.tool_calls:
+                user_message.tool_calls.append(
+                    ToolCall(
+                        id=tool_call.id,
+                        name=tool_call.name,
+                        arguments=tool_call.arguments,
+                        requestor="user",
+                    )
+                )
+        state.messages.append(user_message)
+        return user_message, state
 
 
 class DummyUser(UserSimulator):

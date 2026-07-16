@@ -11,6 +11,9 @@ Also added code to read env vars to activate verification
 4. added _strip_thinking method to clean model output for the verifier. integrated this in Orchestrator.initialize()
 5. Made changes to orchestrator.step() function in order to integrate the tool_call_verifier
 6. Prefer an explicitly passed tool_call_verifier over env-driven self-instantiation, and include the telecom-workflow domain
+7. Added user-impersonation correction in step() (verifier #3): when the user
+   simulator emits agent-style text, re-prompt it in-character via
+   UserSimulator.regenerate_with_guidance().
 """
 
 import json
@@ -970,6 +973,31 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
             # the agent's next prompt.
             if isinstance(getattr(user_msg, "content", None), str):
                 user_msg.content = self._strip_thinking(user_msg.content)
+            # --- User-impersonation correction (verifier #3) ---
+            # If the user simulator slipped into agent-style output, re-prompt
+            # it in-character (bounded by the verifier's reminder budget).
+            if (
+                self.tool_call_verifier
+                and hasattr(self.tool_call_verifier, "is_user_impersonation")
+                and hasattr(self.user, "regenerate_with_guidance")
+                and not user_msg.is_tool_call()
+                and isinstance(getattr(user_msg, "content", None), str)
+                and self.tool_call_verifier.is_user_impersonation(user_msg.content)
+            ):
+                guidance = self.tool_call_verifier.user_reminder_text()
+                if guidance:
+                    try:
+                        logger.info(
+                            "User impersonation detected; re-prompting user in-character"
+                        )
+                        new_msg, self.user_state = self.user.regenerate_with_guidance(
+                            guidance, self.user_state
+                        )
+                        if isinstance(getattr(new_msg, "content", None), str):
+                            new_msg.content = self._strip_thinking(new_msg.content)
+                        user_msg = new_msg
+                    except Exception as e:
+                        logger.warning("User reminder regeneration failed: %s", e)
             user_msg.validate()
             if UserSimulator.is_stop(user_msg):
                 # --- Completion nudge: if required tools not called, nudge agent ---

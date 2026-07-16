@@ -130,6 +130,11 @@ class PolicyVerifier:
         self.max_feedback_per_tool = max_feedback_per_tool
         self.max_nudges = max_nudges
 
+        # Maximum in-character reminders to send the user simulator per task
+        # (verifier #3 — user impersonation correction).
+        self.max_user_reminders = 2
+        self._user_reminder_count = 0
+
         # Track how many times we've blocked each (tool, args) pair (safety valve)
         # Key = (tool_name, frozenset of arg items) so same call+args bypasses after N blocks
         self._block_counts: dict[tuple, int] = {}
@@ -509,205 +514,155 @@ class PolicyVerifier:
 
     def check_completion(self, conversation: list[dict]) -> str | None:
         """
-        Check if the user's request is fully completed.
+        Decide whether it is safe to let the conversation stop.
 
-        Uses SLM to compare the user's task list against the completed actions.
-        For each pending task, either nudges the agent to complete it or
-        requires a strong justification for why it can't be done.
+        Called by the orchestrator when the user emits a stop signal
+        (###STOP###). This guards against two failure modes seen in the retail
+        run:
 
-        Returns a nudge message if something is missing, None if complete.
+          * premature stop — the user says "yes" and immediately stops before
+            the agent has actually executed the confirmed write (verifier #1);
+          * abandoned confirmation — the user stops while an expected write
+            action still has not been performed (verifier #5).
+
+        In both cases we return an agent-directed nudge asking it to finish the
+        outstanding write(s); the orchestrator forwards this instead of
+        stopping. Returns ``None`` (allow the stop) when there is nothing left
+        to do.
         """
-        return None
-
+        # Only nudge a bounded number of times so we can never loop forever.
         if self._nudge_count >= self.max_nudges:
-            logger.info("Max nudges reached (%d), not nudging", self.max_nudges)
+            logger.info("Max nudges reached (%d), allowing stop", self.max_nudges)
             return None
 
-        if not self._expected_tools:
+        # No write actions were ever expected (info-only task) -> safe to stop.
+        if not self._expected_tools and not self._expected_user_tools:
             return None
 
-        # If agent already transferred to human, don't nudge — transfer IS resolution
+        # A transfer to a human is itself a valid resolution -> safe to stop.
         if "transfer_to_human_agents" in self._called_write_tools:
-            logger.info("Agent already transferred to human agent, skipping nudge")
             return None
 
-        # For telecom, include user-side tool calls in the "work done" check
-        all_called = self._called_write_tools + self._called_user_tools
-        all_expected = self._expected_tools + self._expected_user_tools
+        # Compare expected vs. actually-executed write tools (count-aware so
+        # multi-action tasks like "cancel two orders" are handled correctly).
+        from collections import Counter
 
-        real_writes = list(all_called)
-        non_transfer = list(all_expected)
+        expected = Counter(self._expected_tools) + Counter(self._expected_user_tools)
+        called = Counter(self._called_write_tools) + Counter(self._called_user_tools)
 
-        # Build completed actions summary (used in all nudge paths)
+        pending: list[str] = []
+        for tool, need in expected.items():
+            missing = need - called.get(tool, 0)
+            for _ in range(max(0, missing)):
+                pending.append(tool)
+
+        if not pending:
+            # Everything the task required has been executed -> safe to stop.
+            return None
+
+        # There is still outstanding work — build a specific, actionable nudge.
+        self._nudge_count += 1
+        tool_descriptions = {
+            "cancel_pending_order": "cancel the pending order",
+            "modify_pending_order_items": "modify the order items",
+            "modify_pending_order_payment": "change the payment method",
+            "modify_pending_order_address": "change the shipping address",
+            "modify_user_address": "update the user's default address",
+            "return_delivered_order_items": "return the item(s)",
+            "exchange_delivered_order_items": "exchange the item(s)",
+            "book_reservation": "book the reservation",
+            "cancel_reservation": "cancel the reservation(s)",
+            "update_reservation_flights": "update the flights",
+            "update_reservation_baggages": "update the baggage",
+            "update_reservation_passengers": "update the passengers",
+            "send_certificate": "send the certificate",
+            "suspend_line": "suspend the line",
+            "resume_line": "resume the line",
+            "send_payment_request": "send the payment request",
+            "refuel_data": "add data to the line",
+            "enable_roaming": "enable roaming",
+            "disable_roaming": "disable roaming",
+        }
+        missing_descs = [tool_descriptions.get(t, t) for t in pending]
         if self._completed_actions:
             actions_done = "\n".join(f"  - {a}" for a in self._completed_actions)
         else:
-            actions_done = "  (none)"
+            actions_done = "  (none yet)"
 
-        # If no write tools called and we expect non-certificate actions, nudge aggressively
-        # (skip this for certificate-only tasks where the user may not actually want one)
-        non_cert_expected = [t for t in non_transfer if t != "send_certificate"]
-        if not real_writes and non_cert_expected:
-            self._nudge_count += 1
-            tool_descriptions = {
-                "book_reservation": "book the reservation",
-                "cancel_reservation": "cancel the reservation(s)",
-                "update_reservation_flights": "update the flights",
-                "update_reservation_baggages": "update the baggage",
-                "update_reservation_passengers": "update the passengers",
-                "send_certificate": "send the certificate",
-                "cancel_pending_order": "cancel the order",
-                "modify_pending_order_items": "modify the order items",
-                "modify_pending_order_payment": "modify the payment method",
-                "modify_pending_order_address": "modify the shipping address",
-                "modify_user_address": "update the user's default address",
-                "return_delivered_order_items": "return the item(s)",
-                "exchange_delivered_order_items": "exchange the item(s)",
-                "suspend_line": "suspend the line",
-                "resume_line": "resume the line",
-                "send_payment_request": "send the payment request",
-                "refuel_data": "add data to the line",
-                "enable_roaming": "enable roaming",
-                "disable_roaming": "disable roaming",
-            }
-            missing_descs = [tool_descriptions.get(t, t) for t in non_cert_expected]
-            nudge = (
-                f"STOP \u2014 the user's request is NOT complete. You haven't performed any actions yet. "
-                f"You still need to: {', '.join(missing_descs)}. "
-                f"Proceed now. Do not ask for further confirmation."
-            )
-            logger.info("Completion nudge #%d: %s", self._nudge_count, nudge)
-            return nudge
-
-        # Count-aware expected-set check
-        # If all expected tool TYPES have been called AND the call counts match,
-        # skip the SLM check 
-        expected_set = set(non_transfer)
-        called_set = set(real_writes)
-        if expected_set and expected_set.issubset(called_set):
-            # Check if counts also match (handles multi-cancel/multi-book)
-            from collections import Counter
-            expected_counts = Counter(non_transfer)
-            called_counts = Counter(real_writes)
-            counts_match = all(
-                called_counts.get(tool, 0) >= expected_counts[tool]
-                for tool in expected_counts
-            )
-            if counts_match:
-                logger.info("All expected tools called with matching counts (%s), skipping SLM nudge", expected_set)
-                return None
-            logger.info(
-                "Tool types match but counts differ (expected %s, called %s) — running SLM check",
-                dict(expected_counts), dict(called_counts),
-            )
-
-        # SLM task-by-task check for partial completion
-        from tau2.verifier.slm_helper import slm_extract
-
-        # Build task list for SLM
-        if self._task_list:
-            task_str = "\n".join(self._task_list)
-        elif self._user_instructions:
-            task_str = self._user_instructions[:1500]
-        else:
-            task_str = "(not available)"
-
-        # Domain-specific policy context so SLM knows what is possible
-        policy_context = ""
-        if self.domain == "airline":
-            policy_context = (
-                "\n\nIMPORTANT POLICY FACTS:\n"
-                "- Upgrading cabin class (e.g. economy→business) IS possible via update_reservation_flights.\n"
-                "- Downgrading cabin class (e.g. business→economy) IS possible via update_reservation_flights.\n"
-                "- Changing flights on a reservation IS possible (except basic_economy).\n"
-                "- Cancelling a reservation IS possible if: business class, has insurance, within 24hrs, or flight cancelled by airline.\n"
-                "- Economy or basic economy with insurance CAN be cancelled.\n"
-                "- Each reservation has its OWN cancellation — cancelling one does NOT cancel another.\n"
-                "- An agent upgrade + cancel is a valid two-step strategy (upgrade first, then cancel).\n"
-                "- If a task involves multiple reservations, EACH must be handled separately.\n"
-            )
-            # Enhance with DB state: list reservations the agent has acted on vs not
-            acted_res_ids = set()
-            for action in self._completed_actions:
-                # Extract reservation IDs from action summaries
-                import re
-                res_matches = re.findall(r'reservation (\w{6})', action)
-                acted_res_ids.update(res_matches)
-            if acted_res_ids:
-                policy_context += f"\nReservation IDs already acted on: {sorted(acted_res_ids)}\n"
-        elif self.domain == "retail":
-            policy_context = (
-                "\n\nIMPORTANT POLICY FACTS:\n"
-                "- Pending orders can be cancelled or modified (items, payment, address).\n"
-                "- Delivered orders can be returned or exchanged.\n"
-                "- Each order must be handled separately.\n"
-            )
-
-        answer = slm_extract(
-            f"The user requested these tasks:\n{task_str}\n\n"
-            f"The agent has completed these actions:\n{actions_done}\n\n"
-            f"Go through each user task ONE BY ONE and check if it has been "
-            f"completed by the actions above. For each task, respond with either:\n"
-            f"  DONE: <task description>\n"
-            f"  PENDING: <task description>\n\n"
-            f"If ALL tasks are done, just say 'ALL_COMPLETE'.\n\n"
-            f"A task is DONE if:\n"
-            f"  (a) there is a matching action in the completed list above "
-            f"(check reservation IDs / order IDs match), OR\n"
-            f"  (b) the task is a prohibition or constraint (e.g. 'do not cancel', "
-            f"'refuse transfer') — these are ALWAYS DONE as long as the agent "
-            f"did NOT violate them.\n\n"
-            f"A task is PENDING if:\n"
-            f"  - The action has NOT been performed (no matching completed action), OR\n"
-            f"  - The agent claimed it was impossible but it IS actually possible "
-            f"(see policy facts below), OR\n"
-            f"  - The action was done on the WRONG reservation/order (ID mismatch).\n\n"
-            f"Do NOT mark a task as DONE just because the agent discussed it. "
-            f"The action must have actually been executed (appear in completed actions) "
-            f"or be genuinely impossible per policy."
-            f"{policy_context}",
-            conversation,
-            max_tokens=512,
-        )
-        result = answer.strip()
-
-        if "ALL_COMPLETE" in result.upper() or "all_complete" in result.lower():
-            return None
-
-        # Check if there are PENDING items
-        pending_lines = []
-        for line in result.split("\n"):
-            line = line.strip()
-            if line.upper().startswith("PENDING"):
-                pending_lines.append(line)
-
-        if not pending_lines:
-            # SLM didn't find anything pending
-            done_count = result.upper().count("DONE")
-            pending_count = result.upper().count("PENDING")
-            if done_count > 0 and pending_count == 0:
-                return None
-            if "complete" in result.lower() or "done" in result.lower():
-                return None
-
-        # There are pending tasks — build a specific, actionable nudge
-        self._nudge_count += 1
-        pending_str = "\n".join(pending_lines) if pending_lines else result
-
-        # Include what has been done so the agent doesn't repeat it
         nudge = (
-            f"WAIT — your work is not complete.\n\n"
+            "Do not end the conversation yet — the customer's request is not "
+            "fully carried out.\n\n"
             f"Actions completed so far:\n{actions_done}\n\n"
-            f"Still pending:\n{pending_str}\n\n"
-            f"For each pending task, you MUST complete it now using the appropriate tool call. "
-            f"Do NOT claim an action is impossible if it is supported by the system. "
-            f"Use the tools available to you (book_reservation, cancel_reservation, "
-            f"update_reservation_flights, update_reservation_baggages, "
-            f"update_reservation_passengers, send_certificate, transfer_to_human_agents).\n"
-            f"Proceed immediately. Do not ask for further confirmation."
+            f"Still outstanding: {', '.join(missing_descs)}.\n\n"
+            "Execute the outstanding action(s) now with the appropriate tool "
+            "call. If you already asked for confirmation and the customer "
+            "agreed, proceed with the write immediately. Once every action is "
+            "done, ask the customer if there is anything else before finishing."
         )
         logger.info("Completion nudge #%d: %s", self._nudge_count, nudge)
         return nudge
+
+    def is_user_impersonation(self, text: str) -> bool:
+        """
+        Detect when the user simulator has slipped out of character and is
+        talking like the support agent (verifier #3).
+
+        Symptoms observed in the retail run include the "user" turn:
+          * confirming/summarising an action as if it were the agent
+            ("your exchange has been processed", "will ship within ...");
+          * offering further help ("is there anything else I can assist ...");
+          * emitting a raw tool call / action JSON as plain text
+            ("###TOOL_CALL###", '"action": "return_delivered_order_items"').
+
+        Returns True when the text looks like agent/tool output rather than a
+        customer utterance.
+        """
+        if not text or not isinstance(text, str):
+            return False
+        import re
+
+        # Raw tool-call / action JSON leaking into a user turn.
+        if re.search(r"###TOOL_CALL###", text, re.I):
+            return True
+        if re.search(r'"action(_input)?"\s*:', text) and re.search(
+            r"(return|cancel|modify|exchange)_", text
+        ):
+            return True
+
+        agent_markers = re.compile(
+            r"(anything else I can (assist|help)"
+            r"|is there anything else"
+            r"|how can I (help|assist) you"
+            r"|\(yes/no\)"
+            r"|will ship within"
+            r"|has been (processed|confirmed|completed|updated|cancelled|canceled)"
+            r"|processed successfully"
+            r"|shipped as requested"
+            r"|your (new|order|return|exchange|refund).*(will ship|has been|is confirmed)"
+            r"|I(?:'ve| have) (processed|completed|updated|confirmed|cancelled)"
+            r"|refund .*(will be|has been) (issued|processed)"
+            r"|(exchange|return|order|cancellation|modification|refund) "
+            r"(has been |is )?(confirmed|processed|completed))",
+            re.I,
+        )
+        return bool(agent_markers.search(text))
+
+    def user_reminder_text(self) -> str | None:
+        """
+        Return a short in-character reminder for the user simulator, or ``None``
+        once the per-conversation reminder budget is exhausted.
+        """
+        if self._user_reminder_count >= self.max_user_reminders:
+            return None
+        self._user_reminder_count += 1
+        return (
+            "REMINDER: You are the CUSTOMER, not the support agent. Stay in "
+            "character. Do NOT confirm, summarise, or announce that actions "
+            "have been completed, do NOT offer further assistance, and do NOT "
+            "emit tool calls or action JSON. Only state, as the customer, what "
+            "you want or answer the agent's question. Respond again as the "
+            "customer."
+        )
 
     def verify(
         self,
