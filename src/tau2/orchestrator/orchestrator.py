@@ -151,8 +151,21 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
             and os.getenv("TAU2_VERIFIER", "1") != "0"
             and domain in ("airline", "retail", "telecom", "telecom-workflow")
         ):
-            from tau2.verifier.verifier import PolicyVerifier
-            self.tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
+            if os.getenv("TAU2_VERIFIER_MODE", "").strip().lower() == "llm":
+                from tau2.verifier.llm_tool_call_verifier import LLMToolCallVerifier
+
+                self.tool_call_verifier = LLMToolCallVerifier(
+                    db=environment.tools.db,
+                    domain=domain,
+                    policy=environment.get_policy(),
+                    tools=environment.get_tools(),
+                )
+            else:
+                from tau2.verifier.verifier import PolicyVerifier
+
+                self.tool_call_verifier = PolicyVerifier(
+                    db=environment.tools.db, domain=domain
+                )
         if self.tool_call_verifier and hasattr(
             self.tool_call_verifier, "configure_simulation"
         ):
@@ -450,7 +463,16 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                 clean = self._strip_thinking(str(content))
                 if not clean:
                     continue
-                conversation.append({"role": role, "content": clean[:1000]})
+                content_limit = (
+                    8000
+                    if getattr(
+                        self.tool_call_verifier,
+                        "requires_full_conversation",
+                        False,
+                    )
+                    else 1000
+                )
+                conversation.append({"role": role, "content": clean[:content_limit]})
             tool_calls = getattr(item, "tool_calls", None)
             if tool_calls:
                 for tc in tool_calls:
@@ -458,6 +480,10 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
                         "role": "assistant",
                         "content": f"[Tool call: {tc.name}({tc.arguments})]",
                     })
+        if getattr(
+            self.tool_call_verifier, "requires_full_conversation", False
+        ):
+            return conversation
         return conversation[-50:]
 
     def _wrap_tool_results(self, tool_results: list[ToolMessage]) -> Message:

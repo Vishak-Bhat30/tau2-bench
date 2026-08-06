@@ -382,9 +382,21 @@ def build_text_orchestrator(
         "telecom",
         "telecom-workflow",
     ):
-        from tau2.verifier.verifier import PolicyVerifier
-        tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
-        logger.info(f"Policy verifier enabled for domain={domain}")
+        if os.getenv("TAU2_VERIFIER_MODE", "").strip().lower() == "llm":
+            from tau2.verifier.llm_tool_call_verifier import LLMToolCallVerifier
+
+            tool_call_verifier = LLMToolCallVerifier(
+                db=environment.tools.db,
+                domain=domain,
+                policy=environment.get_policy(),
+                tools=environment.get_tools(),
+            )
+            logger.info(f"LLM tool-call verifier enabled for domain={domain}")
+        else:
+            from tau2.verifier.verifier import PolicyVerifier
+
+            tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
+            logger.info(f"Policy verifier enabled for domain={domain}")
 
     agent = build_agent(
         config.effective_agent,
