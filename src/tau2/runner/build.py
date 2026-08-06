@@ -17,6 +17,7 @@ Uses the registry for name resolution. Callers who want full control can skip
 this layer and construct instances directly.
 """
 
+import os
 import uuid
 from copy import deepcopy
 from pathlib import Path
