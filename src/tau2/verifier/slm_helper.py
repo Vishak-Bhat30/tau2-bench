@@ -87,6 +87,22 @@ def _parse_slm_answer(raw: str) -> str:
         else:
             text = text.split("<think>")[-1].strip()
 
+    # Preserve structured JSON responses before applying short-answer parsing.
+    # This supports multi-line / fenced JSON emitted by extraction prompts.
+    fenced = re.search(r"```(?:json)?\s*(\{.*\}|\[.*\])\s*```", text, re.DOTALL)
+    if fenced:
+        return fenced.group(1).strip()
+    for opener, closer in (("{", "}"), ("[", "]")):
+        start = text.find(opener)
+        end = text.rfind(closer)
+        if start >= 0 and end > start:
+            candidate = text[start : end + 1]
+            try:
+                json.loads(candidate)
+                return candidate
+            except json.JSONDecodeError:
+                pass
+
     # 2. If the result is short enough, return as-is
     if len(text) <= 30:
         return text
@@ -124,6 +140,8 @@ def _strip_thinking(text: str) -> str:
     """Remove <think>...</think> blocks so the SLM only sees user-visible text."""
     import re
     cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    if "</think>" in cleaned:
+        cleaned = cleaned.rsplit("</think>", 1)[-1].strip()
     if cleaned.startswith("<think>"):
         cleaned = ""
     return cleaned

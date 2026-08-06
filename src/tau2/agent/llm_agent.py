@@ -176,6 +176,25 @@ class LLMAgent(
         )
         return assistant_message
 
+    def regenerate_with_guidance(
+        self, guidance: str, state: LLMAgentStateType
+    ) -> tuple[AssistantMessage, LLMAgentStateType]:
+        """Replace a premature stop with a verifier-guided response."""
+        if state.messages and isinstance(state.messages[-1], AssistantMessage):
+            state.messages.pop()
+        messages = state.system_messages + state.messages + [
+            SystemMessage(role="system", content=guidance)
+        ]
+        assistant_message = generate(
+            model=self.llm,
+            tools=self.tools,
+            messages=messages,
+            call_name="agent_completion_nudge",
+            **self.llm_args,
+        )
+        state.messages.append(assistant_message)
+        return assistant_message, state
+
 
 AGENT_GT_INSTRUCTION = """
 You are testing that our user simulator is working correctly.

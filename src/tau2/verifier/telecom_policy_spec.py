@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -719,6 +720,22 @@ _KWARGS_RULES = {
     rule_transfer_missing_tools,
 }
 
+# Rules derived directly from the natural-language policy ("policy verifiers").
+# When TAU2_VERIFIER_MODE=no_policy these are skipped, leaving only the
+# instance-specific argument-accuracy checks and the empirical transfer gate.
+POLICY_RULES = {
+    rule_refuel_max_2gb,
+    rule_refuel_line_active,
+    rule_refuel_only_when_data_exceeded,
+    rule_payment_bill_must_be_overdue,
+    rule_payment_no_duplicate_awaiting,
+    rule_resume_contract_not_expired,
+    rule_resume_all_bills_paid,
+    rule_suspend_valid_reason,
+    rule_disable_roaming_not_while_traveling,
+    rule_customer_lookup_name_requires_dob,
+}
+
 
 def check_all(
     tool_name: str,
@@ -730,6 +747,10 @@ def check_all(
 ) -> str | None:
     """Run all applicable telecom policy rules against a tool call."""
     rules = CHEAP_RULES if cheap_only else ALL_RULES
+
+    # Ablation: drop the policy-derived verifiers, keep the rest.
+    if os.environ.get("TAU2_VERIFIER_MODE", "").strip().lower() == "no_policy":
+        rules = [r for r in rules if r not in POLICY_RULES]
 
     # Extract user instructions (ticket) from verifier for arg-accuracy rules.
     # This is much shorter than the full conversation and contains all the

@@ -153,6 +153,12 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         ):
             from tau2.verifier.verifier import PolicyVerifier
             self.tool_call_verifier = PolicyVerifier(db=environment.tools.db, domain=domain)
+        if self.tool_call_verifier and hasattr(
+            self.tool_call_verifier, "configure_simulation"
+        ):
+            self.tool_call_verifier.configure_simulation(
+                self.simulation_id, str(self.task.id)
+            )
 
         # State tracking
         self.agent_state: Optional[Any] = None
@@ -424,6 +430,8 @@ class BaseOrchestrator(ABC, Generic[BaseAgentT, BaseUserT, TrajectoryItemT]):
         """
         import re
         cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+        if "</think>" in cleaned:
+            cleaned = cleaned.rsplit("</think>", 1)[-1].strip()
         if cleaned.startswith("<think>"):
             cleaned = ""
         return cleaned
@@ -727,7 +735,7 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                             if is_valid_user_history_message(msg)
                         ]
                     )
-                else:
+                else:###STOP###
                     self.to_role = Role.USER
                     self.agent_state = self.agent.get_init_state(
                         message_history=[
@@ -998,55 +1006,55 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
                         user_msg = new_msg
                     except Exception as e:
                         logger.warning("User reminder regeneration failed: %s", e)
+            if (
+                UserSimulator.is_stop(user_msg)
+                and self.tool_call_verifier
+                and hasattr(self.tool_call_verifier, "user_completion_feedback")
+                and hasattr(self.user, "regenerate_with_guidance")
+            ):
+                guidance = self.tool_call_verifier.user_completion_feedback()
+                if guidance:
+                    try:
+                        logger.info("Verifier rejected premature user completion")
+                        new_msg, self.user_state = self.user.regenerate_with_guidance(
+                            guidance, self.user_state
+                        )
+                        if isinstance(getattr(new_msg, "content", None), str):
+                            new_msg.content = self._strip_thinking(new_msg.content)
+                        user_msg = new_msg
+                    except Exception as e:
+                        logger.warning("User completion regeneration failed: %s", e)
             user_msg.validate()
             if UserSimulator.is_stop(user_msg):
-                # --- Completion nudge: if required tools not called, nudge agent ---
-                if self.tool_call_verifier and hasattr(self.tool_call_verifier, 'check_completion'):
-                    conversation = self._build_conversation_for_verifier()
-                    nudge = self.tool_call_verifier.check_completion(conversation)
-                    if nudge:
-                        # Replace the stop message with a nudge and continue
-                        logger.info("Completion nudge instead of stopping: %s", nudge)
-                        nudge_msg = UserMessage(
-                            role="user",
-                            content=nudge,
-                        )
-                        nudge_msg.validate()
-                        self.trajectory.append(nudge_msg)
-                        self.message = nudge_msg
-                        self.from_role = Role.USER
-                        self.to_role = Role.AGENT
-                        if self.validate_communication:
-                            self.check_communication_error()
-                        self.step_count += 1
-                        self.environment.sync_tools()
-                        return
                 self.done = True
                 self.termination_reason = TerminationReason.USER_STOP
             # Update voice metadata if audio was generated
             self._update_voice_metadata(user_msg)
 
             self.trajectory.append(user_msg)
+            if (
+                self.tool_call_verifier
+                and hasattr(self.tool_call_verifier, "update_conversation_state")
+                and not user_msg.is_tool_call()
+                and isinstance(getattr(user_msg, "content", None), str)
+            ):
+                self.tool_call_verifier.update_conversation_state(
+                    self._build_conversation_for_verifier(), user_msg.content
+                )
+            if (
+                self.tool_call_verifier
+                and hasattr(self.tool_call_verifier, "conversation_complete")
+                and isinstance(getattr(user_msg, "content", None), str)
+                and self.tool_call_verifier.conversation_complete(user_msg.content)
+            ):
+                self.done = True
+                self.termination_reason = TerminationReason.USER_STOP
             self.message = user_msg
             self.from_role = Role.USER
             if user_msg.is_tool_call():
                 self.to_role = Role.ENV
             else:
                 self.to_role = Role.AGENT
-                # --- Classify task after first real user message ---
-                if (self.tool_call_verifier
-                        and hasattr(self.tool_call_verifier, 'classify_task')
-                        and not self.tool_call_verifier._expected_tools
-                        and self.step_count <= 3):
-                    # Pass user instructions to verifier for reliable extraction
-                    if (hasattr(self.tool_call_verifier, 'set_user_instructions')
-                            and hasattr(self, 'task') and self.task
-                            and hasattr(self.task, 'user_scenario') and self.task.user_scenario):
-                        self.tool_call_verifier.set_user_instructions(
-                            str(self.task.user_scenario)
-                        )
-                    conversation = self._build_conversation_for_verifier()
-                    self.tool_call_verifier.classify_task(conversation)
         # USER/ENV -> AGENT
         elif (
             self.from_role == Role.USER or self.from_role == Role.ENV
@@ -1059,6 +1067,21 @@ class Orchestrator(BaseOrchestrator[AgentT, UserT, Message]):
             if isinstance(getattr(agent_msg, "content", None), str):
                 agent_msg.content = self._strip_thinking(agent_msg.content)
             agent_msg.validate()
+            if (
+                self.agent.is_stop(agent_msg)
+                and self.tool_call_verifier
+                and hasattr(self.tool_call_verifier, "completion_feedback")
+                and hasattr(self.agent, "regenerate_with_guidance")
+            ):
+                guidance = self.tool_call_verifier.completion_feedback()
+                if guidance:
+                    logger.info("Verifier rejected premature agent completion")
+                    agent_msg, self.agent_state = self.agent.regenerate_with_guidance(
+                        guidance, self.agent_state
+                    )
+                    if isinstance(getattr(agent_msg, "content", None), str):
+                        agent_msg.content = self._strip_thinking(agent_msg.content)
+                    agent_msg.validate()
             if self.agent.is_stop(agent_msg):
                 self.done = True
                 self.termination_reason = TerminationReason.AGENT_STOP
